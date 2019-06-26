@@ -1,14 +1,21 @@
 ## Learning Rust
 The sole purpose of this project is to learn the [Rust](http://www.rust-lang.org/) programming language.
 
-### Compiling
-The source code can be found in [src](./src) and currently programs are compiled manually (until I learn a build tool for Rust that is).
+### Installing rust
+Install and use rustup which is similar to nvm.
 
-    rustc --test --out-dir=bin src/insertion.rs
+### Compiling
+```console
+$ cargo build
+```
+
+### Running
+```console
+$ cargo run learning-rust
+```
 
 ### Running tests
 To run a test you have to have compiled using the ```--test``` flag.
-
-    rust.c bin/insertion
-
-
+```console
+$ cargo test
+```
