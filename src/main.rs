@@ -1,3 +1,15 @@
+const NR: u32 = 100;
+
+#[cfg(target_os = "macos")]
+fn printos() {
+    println!("You are running macos!");
+}
+
+#[cfg(linux)]
+fn printos() {
+    println!("You are running macos!");
+}
+
 fn match_pattern(text: &'static str, pattern: &'static str) -> bool {
     println!("text={}, pattern={}", text, pattern);
     return false;
@@ -11,6 +23,7 @@ fn match_test() {
 }
 
 fn main() {
-    println!("main...");
+    println!("main...NR={}", NR);
+    printos();
 }
 
