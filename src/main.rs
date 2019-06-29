@@ -67,11 +67,14 @@ fn main() {
     let danbev = Person {
         name: String::from("Daniel Bevenius")
     };
+    println!("{:?}", danbev);
+    println!("{:#?}", danbev);
     println!("{}", danbev.go_berserk());
     println!("danbev={}", danbev.name);
     panic();
 }
 
+#[derive(Debug)]
 struct Person {
     name: String
 }
