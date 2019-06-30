@@ -67,6 +67,7 @@ fn main() {
     let danbev = Person {
         name: String::from("Daniel Bevenius")
     };
+    Person::log();
     println!("{:?}", danbev);
     println!("{:#?}", danbev);
     println!("{}", danbev.go_berserk());
@@ -82,6 +83,10 @@ struct Person {
 pub trait Berserk {
     fn go_berserk(&self) -> String {
         String::from("Something goes bererk!!")
+    }
+
+    fn log() {
+        println!("Berserk!");
     }
 }
 
