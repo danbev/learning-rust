@@ -72,7 +72,11 @@ fn main() {
     println!("{:#?}", danbev);
     println!("{}", danbev.go_berserk());
     println!("danbev={}", danbev.name);
-    panic();
+    // panic();
+    let mut v = vec![1, 2, 3];
+    let first = &v[0];
+    v.push(4);
+
 }
 
 #[derive(Debug)]
