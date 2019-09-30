@@ -27,7 +27,7 @@ mod tests {
         let text: &'static str = "bajja";
         let pattern: &'static str = "bajja";
         assert!(super::match_pattern(text, pattern) == false);
-        assert!(::match_pattern(text, pattern) == false);
+        assert!(super::match_pattern(text, pattern) == false);
     }
 }
 

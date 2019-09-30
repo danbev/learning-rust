@@ -1,4 +1,4 @@
-fn facrec(n :uint) -> uint {
+fn facrec(n :u32) -> u32 {
     if n <= 1 {
         return 1;
     } else {
@@ -7,7 +7,7 @@ fn facrec(n :uint) -> uint {
     }
 }
 
-fn fac(n :uint) -> uint {
+fn fac(n :u32) -> u32 {
     let mut i = 1;
     let mut result = 1;
     while i <= n {

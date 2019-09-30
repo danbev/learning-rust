@@ -1,4 +1,4 @@
-fn insertion_sort(arr: &mut[int]) {
+fn insertion_sort(arr: &mut [i32]) {
     let (mut i, n)  = (1, arr.len());
     while i < n {
         let mut j = i;
@@ -14,19 +14,19 @@ fn insertion_sort(arr: &mut[int]) {
     }
 }
 
-#[test]
+#[cfg(test)]
 fn insertion_sort_test() {
-    let expected: [int, ..5] = [1, 2, 3, 4, 5];
-    let mut arr: [int, ..5] = [2, 4, 1, 3, 5];
-    insertion_sort(arr);
+    let expected: [i32; 5] = [1, 2, 3, 4, 5];
+    let mut arr: [i32; 5] = [2, 4, 1, 3, 5];
+    insertion_sort(&mut arr);
     assert!(arr == expected);
 }
 
-#[test]
+#[cfg(test)]
 fn insertion_sort_non_equal_test() {
-    let expected: [int, ..5] = [2, 1, 3, 4, 5];
-    let mut arr: [int, ..5] = [2, 4, 1, 3, 5];
-    insertion_sort(arr);
+    let expected: [i32; 5] = [2, 1, 3, 4, 5];
+    let mut arr: [i32; 5] = [2, 4, 1, 3, 5];
+    insertion_sort(&mut arr);
     assert!(arr != expected);
 }
 

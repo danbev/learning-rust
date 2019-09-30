@@ -1,4 +1,4 @@
-fn selection_sort(arr: &mut[int]) {
+fn selection_sort(arr: &mut [i32]) {
     let (mut i, n)  = (0, arr.len());
     while i < n {
         let (mut j, mut min) = (i, i);
@@ -17,9 +17,9 @@ fn selection_sort(arr: &mut[int]) {
 
 #[test]
 fn selection_sort_test() {
-    let expected: [int, ..5] = [1, 2, 3, 4, 5];
-    let mut arr: [int, ..5] = [2, 4, 1, 3, 5];
-    selection_sort(arr);
+    let expected: [i32; 5] = [1, 2, 3, 4, 5];
+    let mut arr: [i32; 5] = [2, 4, 1, 3, 5];
+    selection_sort(&mut arr);
     assert!(arr == expected);
 }
 

@@ -1,4 +1,6 @@
-[package]
-name = "learning-rust"
-version = "0.1.0"
-authors = ["Daniel Bevenius <daniel.bevenius@gmail.com>"]
+[workspace]
+
+members = [
+    "main",
+    "snippets",
+]

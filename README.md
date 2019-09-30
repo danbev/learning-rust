@@ -25,7 +25,7 @@ $ cargo +nightyly build --target=wasm32-wasi
 
 ### Compiling
 ```console
-$ cargo build
+$ cargo build --tests
 ```
 
 ### Running
@@ -34,9 +34,13 @@ $ cargo run learning-rust
 ```
 
 ### Running tests
-To run a test you have to have compiled using the ```--test``` flag.
+To run a test you have to have compiled using the `--tests` flag.
 ```console
 $ cargo test
 ```
 
-
+### Manual testing
+```console
+$ rustc snippets/src/readline.rs
+$ ./readline
+```
