@@ -1,12 +1,11 @@
-mod enums {
 
     #[derive(Debug)]
-    pub enum Something {
+    enum Something {
         ONE(String),
         TWO(String),
     }
 
-    pub fn func(s :Something) {
+    fn func(s :Something) {
       println!("{:?}", s);
     }
 
@@ -19,6 +18,5 @@ mod enums {
             super::func(s);
             assert_eq!(2 + 2, 4);
     }
-}
 
 }
