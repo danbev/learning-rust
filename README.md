@@ -36,7 +36,7 @@ $ cargo run learning-rust
 ### Running tests
 To run a test you have to have compiled using the `--tests` flag.
 ```console
-$ cargo test
+$ cargo test -- --nocapture
 ```
 
 ### Manual testing
