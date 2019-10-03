@@ -12,10 +12,12 @@
 
     #[cfg(test)]
     mod tests {
+        use super::Something;
+        use super::func;
         #[test]
         fn enums_test() {
-            let s = super::Something::ONE(String::from("first"));
-            super::func(s);
+            let s = Something::ONE(String::from("first"));
+            func(s);
             assert_eq!(2 + 2, 4);
     }
 
