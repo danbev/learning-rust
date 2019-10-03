@@ -9,7 +9,7 @@ struct Something {
 
 impl Doit for Something {
     fn doit(&self) {
-      println!("s = {}", self.name);
+      println!("something.name = {}", self.name);
     }
 }
 
@@ -24,4 +24,5 @@ mod tests {
         s.doit();
         assert_eq!(1, 1);
     }
+
 }
