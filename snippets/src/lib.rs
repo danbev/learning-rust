@@ -7,3 +7,4 @@ mod types;
 mod traits;
 mod results;
 mod macros;
+mod envvar;
