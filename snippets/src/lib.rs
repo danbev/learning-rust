@@ -8,3 +8,4 @@ mod traits;
 mod results;
 mod macros;
 mod envvar;
+mod string;
