@@ -4,7 +4,12 @@ pub trait Doit {
 }
 
 struct Something {
-    name: String
+    name: String,
+}
+
+impl Something {
+    fn print(&self) -> () {
+    }
 }
 
 impl Doit for Something {
