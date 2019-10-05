@@ -9,3 +9,4 @@ mod results;
 mod macros;
 mod envvar;
 mod string;
+mod closures;
