@@ -3,4 +3,5 @@
 members = [
     "main",
     "snippets",
+    "hyper-server",
 ]
