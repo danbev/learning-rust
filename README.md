@@ -71,3 +71,32 @@ When the box goes out of scope, the pointer on the stack is cleaned up, as well
 as the value on the heap. This is done by calling the Drop trait.
 
 
+### Structs
+We can declare a struct like this:
+```rust
+struct A {
+    x: i32,
+    y: i32
+}
+```
+And we would create and access the members of such a struct like this:
+```rust
+let a = A {x:1, y:2};
+assert_eq!(a.x, 1);
+assert_eq!(a.y, 2);
+```
+
+Next we can also declare a struct like this:
+
+```rust
+struct C(i32, i32);
+```
+This struct will have two member named `0` and `1`.
+```rust
+let c = C(1, 2);
+assert_eq!(c.0, 1);
+assert_eq!(c.1, 2);
+```
+Notice that we create the struct with parentheses and not brackets. These structs
+are called Tuple Structs and are used whey you want to have separate types but
+the names of the members is not important. 

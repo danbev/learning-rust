@@ -11,3 +11,4 @@ mod envvar;
 mod string;
 mod closures;
 mod boxing;
+mod structs;
