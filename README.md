@@ -138,3 +138,28 @@ assert_eq!(c.1, 2);
 Notice that we create the struct with parentheses and not brackets. These structs
 are called Tuple Structs and are used whey you want to have separate types but
 the names of the members is not important. 
+
+### Troubleshooting
+Wasmtime build issue:
+```console
+$ cargo build
+error: failed to read `/work/wasm/wasmtime/crates/wasi-common/WASI/tools/witx/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)
+```
+```console
+$ git pull --recurse-submodules
+Already up to date.
+```
+```console
+$ git submodule update --init --recursive
+```
+This last one did the trick. The issue might have been that this repository
+in question has been moved to a different org (not 100% sure here)
+
+
+### doc comment
+You can add comments to a crate/module/functions using `//!` which will then be generated
+using `cargo doc`.
+
