@@ -81,6 +81,27 @@ println!("x: {}, y: {}, address: {:p}", x, y, y);
 x: 18, y: 18, &y: 0x700008ddc484
 ```
 
+For heap allocated objects, like String, there is no deep copying done
+automatically.
+```rust
+let s1 = String::from("hello");
+let s2 = s1;
+```
+So both s1 and s2 are stack allocated String objects that point to the same
+data. When this is done s1 will become null or something equivalent and no
+longer valid to be referenced leading to a compile time error.
+To create a copy you can use `clone`, but note that this will create a copy
+of the data on the heap and the two String instances will point to different
+places on the heap.
+
+
+### String literals
+String literals are stored inside the binary (text or data section?)
+```rust
+let s:&str = "Hello, world!";
+```
+
+
 #### Box<T>
 In C++ we also have `std::unique_ptr` and Rust has something similar named Box.
 This is for anything heap based, only the pointer itself is on the stack.
