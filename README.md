@@ -6,7 +6,7 @@ Install and use rustup which is similar to nvm.
 
 ### Rustup
 Install Rust using rustup:
-```console
+` `console
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 $ rustup install nightly-x86_64-apple-darwin
 ```
@@ -44,6 +44,23 @@ $ cargo test -- --nocapture
 $ rustc snippets/src/readline.rs
 $ ./readline
 ```
+
+### build.rs
+By default Cargo looks for a "build.rs" file in a package root (even if you do
+not specify a value for build). 
+This file will be compiled and invoked before anything else is compiled in the
+package.
+
+If you want to print something that gets displayed when building you can use
+`cargo:warning`:
+```console
+    println!("cargo:warning=BEVE................out_dir: {:?}", out_dir);
+```
+
+The output from build.rs (usage of println!) can be found in `target/debug/<pkg>output`.
+
+As an example, in wasmtime there is a build.rs file that generates a file
+that runs tests `target/debug/build/wasmtime-cli-83cc8a2a072b3d0d/out/wast_testsuite_tests.rs`.
 
 
 ### Smart pointers
