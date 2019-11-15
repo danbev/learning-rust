@@ -13,3 +13,6 @@ mod closures;
 mod boxing;
 mod structs;
 mod clone;
+mod module_path;
+mod options;
+mod hashmap;

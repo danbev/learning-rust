@@ -45,6 +45,28 @@ $ rustc snippets/src/readline.rs
 $ ./readline
 ```
 
+### Crate
+A crate is a binary or library.
+A package can have multiple binary crates by placing files in the src/bin
+directory: each file will be a separate binary crate.
+
+### Packages
+A package contains one or more crate, it packages crates. Each package has a
+Cargo.toml which describes how to package these crates.
+
+### Modules
+Allows for organizing code in a crate and can be used for making code private/
+public.
+
+src/main.rs and src/lib.rs are called crate roots. The reason for their name is
+that the contents of either of these two files form a module named crate at the
+root of the crate’s module structure, known as the module tree.
+
+### Path
+A path how we identify functions/variables in modules. These paths can be absolute
+or relative. An absolute path starts from the root; `crate::`, and a relative
+path starts with `self::`, or `super::`. Super is like doing `cd ..` in a terminal.
+
 ### build.rs
 By default Cargo looks for a "build.rs" file in a package root (even if you do
 not specify a value for build). 
@@ -158,8 +180,32 @@ $ git submodule update --init --recursive
 This last one did the trick. The issue might have been that this repository
 in question has been moved to a different org (not 100% sure here)
 
+### prelude
+Rust includes:
+```rust
+extern crate std;
+use std::prelude::v1::*;
+```
+This contents of v1 can be found [here](https://doc.rust-lang.org/std/prelude/v1/index.html).
 
 ### doc comment
 You can add comments to a crate/module/functions using `//!` which will then be generated
 using `cargo doc`.
+
+### Error handling
+`panic!` macro will by default unwind the program walking up the stack and
+releasing resources as needed. This can be avoided if you are ok letting 
+the OS to this (the process will just go away and you don't really have any
+external resources that need cleaning). The you can add the following to your
+Cargo.toml file:
+```
+[profile.release]
+panic = 'abort'
+```
+Panic is used like this:
+```rust
+panic!("doh!");
+```
+You can use `RUST_BACKTRACE=1` to get a list of all functions that have been
+called to get to the point where the panic happened.
 
