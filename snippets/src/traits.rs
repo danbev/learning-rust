@@ -18,6 +18,14 @@ impl Doit for Something {
     }
 }
 
+fn doit<T: Doit>(d: T) {
+    d.doit();
+}
+/* Below is an alternative syntax:
+fn doit(d: impl Doit) {
+    d.doit();
+}
+*/
 
 #[cfg(test)]
 mod tests {
