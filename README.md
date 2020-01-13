@@ -39,10 +39,37 @@ To run a test you have to have compiled using the `--tests` flag.
 $ cargo test -- --nocapture
 ```
 
+```
+$ cargo test test_name
+```
+
+Ignore a test:
+```rust
+#[ignore]
+```
+You can run just the ignored annotated tests using:
+```
+$ cargo test -- --ignored
+```
+
 ### Manual testing
 ```console
 $ rustc snippets/src/readline.rs
 $ ./readline
+```
+
+### Debugging
+Debug symbols are enabled by default when using cargo build or cargo run 
+without the `--release` flag.
+```console
+$ lldb -- ./target/debug/main
+(lldb) br s -f main.rs -l 47
+(lldb) r
+```
+
+You want to have the rust sources installed:
+```console
+$ rustup component add rust-src
 ```
 
 ### Crate
@@ -130,6 +157,11 @@ This is for anything heap based, only the pointer itself is on the stack.
 When the box goes out of scope, the pointer on the stack is cleaned up, as well
 as the value on the heap. This is done by calling the Drop trait.
 
+### Rc<T>
+Reference counting type for multiple ownerships
+
+### Ref<T> RefMut<T>
+
 
 ### Structs
 We can declare a struct like this:
@@ -191,6 +223,35 @@ This contents of v1 can be found [here](https://doc.rust-lang.org/std/prelude/v1
 ### doc comment
 You can add comments to a crate/module/functions using `//!` which will then be generated
 using `cargo doc`.
+```
+$ cargo doc --open
+```
+
+Adding an examples section to a document comment will allow this example code
+to be run using `cargo test`:
+```rust
+/// # Examples
+///
+/// ```
+/// let arg = 5;
+/// let answer = my_crate::add_one(arg);
+///
+/// assert_eq!(6, answer);
+/// ```
+```
+
+### Cargo install
+This will install a binary into `$HOME/.cargo/bin`. 
+
+### Cargo extensions
+If a binary in your $PATH is named cargo-something, you can run it as if it was
+a Cargo subcommand by running cargo something. So you could do cargo install to
+install an extension and the be able to run it.
+
+Use list to show all commands
+```console
+$ cargo --list
+```
 
 ### Error handling
 `panic!` macro will by default unwind the program walking up the stack and
@@ -208,4 +269,34 @@ panic!("doh!");
 ```
 You can use `RUST_BACKTRACE=1` to get a list of all functions that have been
 called to get to the point where the panic happened.
+
+Rather than panic! on an error, ? will return the error value from the current
+function for the caller to handle. For example:
+```rust
+let contents = fs::read_to_string(config.filename)?;
+```
+
+```rust
+return Ok(());
+of just
+OK(())
+```
+This Ok(()) syntax might look a bit strange at first, but using () like this is
+the idiomatic way to indicate that we’re calling run for its side effects only;
+it doesn’t return a value we need.
+
+
+### Closures
+
+#### Fn trait
+Borrows the values from the closure env immutably.
+
+#### FnMut trait
+Mutably borrows values from the closure env and can hence change them.
+
+#### FnOnce trait
+Takes ownership of the values and moves them. Is named once because the closure
+cannot take ownership of the same variables more than once.
+
+
 
