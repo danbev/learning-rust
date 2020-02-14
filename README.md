@@ -300,3 +300,78 @@ cannot take ownership of the same variables more than once.
 
 
 
+### Building rustc from source
+```console
+$ cp config.toml.example config.toml
+```
+I've set the following configuration options:
+```
+targets = "WebAssembly;X86"
+```
+When updating the configuration you (might) have to remove the `build` directory
+for an updated configuration to take effect.
+
+```console
+$ ./x.py build -i --stage 1 src/libstd
+```
+`-i` specifies an incremental build
+
+In the docs they mention that to have multiple toolchains installed you can
+use rustup to link them. I'm still trying to figure out how I can build a compiler
+with support for a wasm32-unknown-unknown, or wasm32-wasi target.
+
+### Target triple
+These are in the format:
+```
+<architecture-vendor-sys-abi>
+```
+Arcitectur: on linux systems uname -m
+Vendor: unknown on linux, `pc` for Windows, and `apple` for OSX.
+System: uname -s
+ABI: On Linux, this refers to the libc implementation which you can find out with ldd --version. 
+
+So for `wasm32-unknown-unknown`, `wasm32` is the arcitecture, no vendor is
+specified, and so system is specified.
+For `wasm32-wasi`
+
+To see the supported targets:
+```console
+$ rustc --print target-list 
+```
+
+
+#### Troubleshooting
+```console
+Caused by:
+  process didn't exit successfully: `/home/danielbevenius/work/wasm/enarx/demo/target/debug/build/wasmtime-basic-308ab90e55f39614/build-script-build` (exit code: 101)
+--- stdout
+Compiling Rust source to WASM...
+
+--- stderr
+error: linker `rust-lld` not found
+  |
+  = note: No such file or directory (os error 2)
+
+error: aborting due to previous error
+
+thread 'main' panicked at 'assertion failed: Command::new("rustc").arg("-C").arg("lto").arg("-C").arg("opt-level=3").arg("--target").arg("wasm32-unknown-unknown").arg("-o").arg(format!("{}/add.wasm",
+                                                                                                                                            out)).arg("src/add.rs").status().expect("failed to compile WASM module").success()', wasmtime-basic/build.rs:39:9
+
+```
+I've not specified that lld should be compiled and made available in the sysroot,
+perhaps doing that will allow for the 
+I can see this executable is compiled:
+```console
+$ file ./build/x86_64-unknown-linux-gnu/stage0/lib/rustlib/x86_64-unknown-linux-gnu/bin/rust-lld
+```
+
+
+```console
+signalhandlers/SignalHandlers.hpp:5:10: fatal error: 'setjmp.h' file not found
+signalhandlers/SignalHandlers.hpp:5:10: fatal error: 'setjmp.h' file not found, err: true
+thread 'main' panicked at 'Unable to generate bindings: ()', /home/danielbevenius/.cargo/git/checkouts/wasmtime-5c699c1a3ee5d368/b7d86af/wasmtime-runtime/build.rs:32:5
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+```console
+export BINDGEN_EXTRA_CLANG_ARGS="-I/usr/include" 
+```
