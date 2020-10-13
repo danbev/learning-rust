@@ -6,7 +6,7 @@ Install and use rustup which is similar to nvm.
 
 ### Rustup
 Install Rust using rustup:
-` `console
+```console
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 $ rustup install nightly-x86_64-apple-darwin
 ```
