@@ -312,7 +312,7 @@ When updating the configuration you (might) have to remove the `build` directory
 for an updated configuration to take effect.
 
 ```console
-$ ./x.py build -i --stage 1 src/libstd
+$ ./x.py build -i --stage 2
 ```
 `-i` specifies an incremental build
 
