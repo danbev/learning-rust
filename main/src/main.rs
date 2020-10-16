@@ -5,9 +5,9 @@ fn printos() {
     println!("You are running macos!");
 }
 
-#[cfg(linux)]
+#[cfg(target_os = "linux")]
 fn printos() {
-    println!("You are running macos!");
+    println!("You are running linux!");
 }
 
 #[cfg(target_os = "wasi")]
