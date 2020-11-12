@@ -39,8 +39,9 @@ To run a test you have to have compiled using the `--tests` flag.
 $ cargo test -- --nocapture
 ```
 
+Run a single test
 ```
-$ cargo test test_name
+$ cargo test boxing::tests::boxing_test
 ```
 
 Ignore a test:
@@ -78,8 +79,13 @@ A package can have multiple binary crates by placing files in the src/bin
 directory: each file will be a separate binary crate.
 
 ### Packages
-A package contains one or more crate, it packages crates. Each package has a
-Cargo.toml which describes how to package these crates.
+A package contains one or more crate, it packages crates. A crate is a binary
+or a library.
+Each package has a Cargo.toml which describes how to package these crates.
+
+If the package directory contains src/lib.rs Cargo knows this is s library crate
+with the same name as the package, and src/lib.rs is its crate root. Cargo
+will pass src/lib.rs to rustc to build the library.
 
 ### Modules
 Allows for organizing code in a crate and can be used for making code private/
@@ -88,6 +94,44 @@ public.
 src/main.rs and src/lib.rs are called crate roots. The reason for their name is
 that the contents of either of these two files form a module named crate at the
 root of the crate’s module structure, known as the module tree.
+
+For an example of a module see [module_path.rs](snippets/src/module_path.rs).
+
+For example:
+```rust
+pub mod namespace {
+  pub fun doit() {}
+  fun doit() {}
+}
+```
+So you can have public modules which are given a name, kind of like a namespace
+in C++. The function defined in a module can be public or private.
+
+The files src/lib.rs or src/main.rs are also modules which are named `crate` and
+this is the reason they are called root modules. If you need to refer to a
+module you can use `crate::module::function_name();` for example. This is called
+an absoute path. You can also use relative paths using `self` or `super`
+
+### use
+Is used to bring module into scope so that we don't have to use the whole
+path for it (similar to `using` in C++ I guess):
+```rust
+use crate::module_path::something_private::private_function;                
+```
+And after this we can just call `private_function();`. This also works with
+a wildcard so the above could have been written as:
+```rust
+use crate::module_path::something_private::*;
+```
+
+### as
+If there is a conflict when the same symbols are in a file because of using
+`use` then one can alias them:
+```rust
+use crate::module_path::something_private::private_function;                   
+use crate::module_path::something_private::private_function as bajja; 
+```
+
 
 ### Path
 A path how we identify functions/variables in modules. These paths can be absolute
@@ -190,7 +234,7 @@ assert_eq!(c.0, 1);
 assert_eq!(c.1, 2);
 ```
 Notice that we create the struct with parentheses and not brackets. These structs
-are called Tuple Structs and are used whey you want to have separate types but
+are called Tuple Structs and are used when you want to have separate types but
 the names of the members is not important. 
 
 ### Troubleshooting
@@ -256,8 +300,8 @@ $ cargo --list
 ### Error handling
 `panic!` macro will by default unwind the program walking up the stack and
 releasing resources as needed. This can be avoided if you are ok letting 
-the OS to this (the process will just go away and you don't really have any
-external resources that need cleaning). The you can add the following to your
+the OS do this (the process will just go away and you don't really have any
+external resources that need cleaning). Then you can add the following to your
 Cargo.toml file:
 ```
 [profile.release]
@@ -270,15 +314,15 @@ panic!("doh!");
 You can use `RUST_BACKTRACE=1` to get a list of all functions that have been
 called to get to the point where the panic happened.
 
-Rather than panic! on an error, ? will return the error value from the current
-function for the caller to handle. For example:
+Rather than `panic!` on an error, `?` will return the error value from the
+current function for the caller to handle. For example:
 ```rust
 let contents = fs::read_to_string(config.filename)?;
 ```
 
 ```rust
 return Ok(());
-of just
+or just
 OK(())
 ```
 This Ok(()) syntax might look a bit strange at first, but using () like this is
@@ -375,3 +419,71 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 ```console
 export BINDGEN_EXTRA_CLANG_ARGS="-I/usr/include" 
 ```
+
+### Deno exploration
+Building deno
+```console
+$ cargo build
+```
+
+Verifying the build:
+```console
+$ cargo run --bin deno -- --version
+    Finished dev [unoptimized + debuginfo] target(s) in 0.17s
+     Running `target/debug/deno --version`
+deno 1.4.6
+v8 8.7.220.3
+typescript 4.0.3
+```
+
+Run a script:
+```console
+$ ./target/debug/deno run std/examples/welcome.ts 
+Check file:///home/danielbevenius/work/deno/deno/std/examples/welcome.ts
+Welcome to Deno 🦕
+```
+
+Lets step through this and see how it works:
+```console
+$ rust-lldb -- ./target/debug/deno run std/examples/welcome.ts 
+(lldb) br s -n main
+(lldb) r
+```
+
+```console
+$ file target/debug/deno
+target/debug/deno: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=2eeb497fb5461d2d4fad67a430a9702e1cf91db7, for GNU/Linux 3.2.0, with debug_info, not stripped
+$ ldd target/debug/deno
+	linux-vdso.so.1 (0x00007fffb0796000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00007f2629db6000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x00007f2629d9c000)
+	librt.so.1 => /lib64/librt.so.1 (0x00007f2629d91000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f2629d6f000)
+	libm.so.6 => /lib64/libm.so.6 (0x00007f2629c29000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007f2629a60000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f262f539000)
+```
+
+### Build scripts
+One can place a build.rs file in the root of a project and cargo will compile
+it and run it before the build. This can be used to compile C/C++ libraries.
+For example, rusty-v8 uses a build script.
+
+
+### async/await
+Remember that asynchronous programming allows us to run multiple task concurrently
+on the `same` thread. The goal is to reduce the overhead of using multiple threads.
+Threads are supported at the operating system level and are easy to use (perhaps
+minus synchronization issues) but that is not the case for async code which is
+why the language or a library is required.
+
+`async` 
+
+To block and wait for an async function `block_on` can be used which will block
+the current thread. `await` on the other hand will not block the current thread
+but instead will asynchronously wait for the future to complete. So await will
+allow other tasks to be scheduled on the same thread if the current task is
+blocked and cannot make progress.
+
+### Future
+Is an async computation that can produce a value
