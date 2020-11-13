@@ -1,1 +1,1 @@
-void doit();
+void doit(int x);
