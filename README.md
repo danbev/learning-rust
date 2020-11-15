@@ -112,6 +112,65 @@ this is the reason they are called root modules. If you need to refer to a
 module you can use `crate::module::function_name();` for example. This is called
 an absoute path. You can also use relative paths using `self` or `super`
 
+### library
+When you have a lib.rs and have included tests in those files there will be
+an executable created that will contains the tests. This can be run manually:
+```console
+$ ./target/debug/snippets-fdf89e874d36062f
+
+running 19 tests
+test boxing::tests::boxing_test ... ok
+test closures::tests::closure_test ... ok
+test enums::tests::enums_test ... ok
+test envvar::tests::envar_test ... ok
+test factorial::fac_test ... ok
+test clone::tests::format_test ... ok
+test factorial::facrec_test ... ok
+test hashmap::tests::options_test ... ok
+test macros::tests::macro_test ... ok
+test module_path::tests::module_path ... ok
+test results::tests::result_test ... ok
+test selection::selection_sort_test ... ok
+test owner::tests::run_test ... ok
+test structs::tests::struct_a ... ok
+test string::tests::format_test ... ok
+test structs::tests::struct_c ... ok
+test traits::tests::traits_test ... ok
+test vectors::tests::vector_test ... ok
+test types::tests::types_test ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+
+```
+You can see the options using `--help`:
+```console
+$ ./target/debug/snippets-fdf89e874d36062f --help
+```
+Listing all the available tests:
+```console
+$ ./target/debug/snippets-fdf89e874d36062f --list
+```
+
+The archive for the library is a rlib file:
+```console
+$ ar t target/debug/libsnippets.rlib
+
+```
+
+### rlib
+Is an archive for statically linked object files.
+
+To list the contents:
+```console
+$ ar t target/debug/libsnippets.rlib
+```
+It will contains a number of object files, and a `lib.rmeta` file.
+
+```console
+$ cargo install rustfilt
+$ readelf -s  target/debug/libsnippets.rlib | rustfilt
+```
+
 ### use
 Is used to bring module into scope so that we don't have to use the whole
 path for it (similar to `using` in C++ I guess):
@@ -470,12 +529,27 @@ it and run it before the build. This can be used to compile C/C++ libraries.
 For example, rusty-v8 uses a build script.
 
 
+### Native threads
+Tasks provided by the OS, like 1:1 between a task and a thread. The OS can
+handle the scheduling. A thread (task in linux) can be quite heavy and there
+is a limit on the number of threads that can be created.
+
+### Green threads
+Is where a single OS thread can run multiple tasks. Are not part of the
+overall system, instead the runtime handles the scheduling. Lighter weight than
+native thread and you can create more of them.
+
 ### async/await
 Remember that asynchronous programming allows us to run multiple task concurrently
 on the `same` thread. The goal is to reduce the overhead of using multiple threads.
 Threads are supported at the operating system level and are easy to use (perhaps
 minus synchronization issues) but that is not the case for async code which is
 why the language or a library is required.
+Remember that Rust does not have a runtime like JavaScript for example. In
+JavaScript promises can be run when they get created, but in Rust there has to
+be something that does this. This is where the need for an executor for futures
+need to be specified. One that would work is Tokio for example.
+
 
 `async` 
 
@@ -487,3 +561,59 @@ blocked and cannot make progress.
 
 ### Future
 Is an async computation that can produce a value
+
+
+### Trait
+Is like an Inteface which can be implemented by multiple types.
+Like C++ templates the compiler can generate a separate copy of an abstraction
+for each way it is implemented.
+
+### Ownership
+Every value in Rust as a variable called its owner and there can only be one
+owner at a time. When the variables goes out of scope the value will be dropped.
+This sounds very much like a unique_ptr in C++ (RAII).
+
+Values that are stored on the stack have a known size at compile time and can
+be copied without any problems:
+```rust
+  let x = 22;                                                               
+  let y = x;                                                                
+  println!("x = {} {:p}, y = {} {:p}", x, &x, y, &y); 
+```
+```console
+x = 22 0x7fadf91d9550, y = 22 0x7fadf91d9554
+```
+Notice that these are different memory locations and contain different values,
+in this case both contain 22 but changing one will not affect the other.
+
+All types that implement the `Copy` trait can be used as above and assigned to
+other variables and the contents will be copied.
+
+#### References
+Alls for passing a value without taking ownership of it, the ownership stays
+with the calling value outside of a function call for example. This is called
+borrowing. When doing this we can't modify the value as we don't own it. But we
+can specify that it should be a mutable reference and then we can change it.
+
+### Lifetimes
+These are annotations that start with `'` followed by a variable name.
+
+```console
+error[E0597]: `y` does not live long enough
+ --> snippets/src/lifetimes.rs:7:15
+  |
+7 |           x = &y;
+  |               ^^ borrowed value does not live long enough
+8 |       }
+  |       - `y` dropped here while still borrowed
+9 |       println!("x = {}", x);
+  |                          - borrow later used here
+
+```
+
+### Underscore
+This can be used when one needs to specify a type but can let Rust determine
+the template type, for example HashMap<_, _>. We might need to specify the type
+of collection Vec, HashMap, but we still want Rust to determine the types the
+collection holds.
+
