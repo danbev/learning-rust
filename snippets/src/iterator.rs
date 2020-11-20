@@ -8,7 +8,9 @@ pub mod iterator {
         let tuple = iter.next().unwrap();
         println!("tuple.0: {}", tuple.0);
         println!("tuple.1: {}", tuple.1);
-        println!("{:?}", iter.next());
+        let (two, five) = iter.next().unwrap();
+        println!("{:?}", two);
+        println!("{:?}", five);
         println!("{:?}", iter.next());
         println!("{:?}", iter.next());
     }
