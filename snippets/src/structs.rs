@@ -5,6 +5,8 @@ struct A {
 
 struct C(i32, i32);
 
+struct Person { name: &'static str }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -20,5 +22,11 @@ mod tests {
         let c = C(1, 2);
         assert_eq!(c.0, 1);
         assert_eq!(c.1, 2);
+    }
+
+    #[test]
+    fn struct_something() {
+        let p = Person{name: "Fletch"};
+        println!("{}", p.name);
     }
 }
