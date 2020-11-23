@@ -16,6 +16,15 @@ pub mod lifetimes {
       something(&v);
       let nr = v.get(0);
       println!("v[0] = {}", nr.unwrap());
+
+      'here:
+       for n in 0..5 {
+           println!("n: {}", n);
+           if n == 3 {
+               println!("n == 3 break to 'here");
+               break 'here
+           }
+       }
     }
 
     pub fn doit(s: &str) -> &str {
