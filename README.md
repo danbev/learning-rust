@@ -610,6 +610,14 @@ error[E0597]: `y` does not live long enough
   |                          - borrow later used here
 
 ```
+The rust compiler can figure out lifetimes so that we don't have to specify them
+but only if the following are true:
+* The functions does not return a reference
+* There is exactly one reference input parameter
+
+When we pass a variable as opposed to a reference we are giving up ownership.
+When passing a variable as a reference you are lending it to the function. You
+can pass around as many immutable references as you like with out any issue.
 
 ### Underscore
 This can be used when one needs to specify a type but can let Rust determine
@@ -617,3 +625,32 @@ the template type, for example HashMap<_, _>. We might need to specify the type
 of collection Vec, HashMap, but we still want Rust to determine the types the
 collection holds.
 
+
+### Intermediate representation
+```console
+$ rustc +nightly -Zunpretty=hir src/simple.rs
+#[prelude_import]
+use ::std::prelude::v1::*;
+#[macro_use]
+extern crate std;
+fn main() {
+              {
+                  ::std::io::_print(::core::fmt::Arguments::new_v1(&["simple example to show IR\n"],
+                                                                   &match () {
+                                                                        () =>
+                                                                        [],
+                                                                    }));
+              };
+          }
+```
+
+
+### Building rustc manually
+Build a specific branch
+```console
+$ git co -b 1.47.0 1.47.0
+$ git submodule deinit -f .
+$ git submodule update --init
+```
+
+```
