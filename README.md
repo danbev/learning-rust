@@ -318,6 +318,10 @@ Notice that we create the struct with parentheses and not brackets. These struct
 are called Tuple Structs and are used when you want to have separate types but
 the names of the members is not important. 
 
+### Foreign Function Interface
+
+Example can be found in [ffi](./ffi).
+
 ### Troubleshooting
 Wasmtime build issue:
 ```console
