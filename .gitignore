@@ -1,2 +1,5 @@
 *.swp
 target
+basic.ll
+simple.ll
+main/simple
