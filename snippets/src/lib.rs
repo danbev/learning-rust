@@ -19,3 +19,4 @@ mod lifetimes;
 mod iterator;
 mod refs;
 mod functions;
+mod cell;

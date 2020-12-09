@@ -253,15 +253,37 @@ String literals are stored inside the binary (text or data section?)
 let s:&str = "Hello, world!";
 ```
 
+### Inherited mutability
+This is the case when you take a &mut reference to some struct allowing
+modifying any fields of the struct.
 
-#### Box<T>
+### Interior mutability
+This allows certain fields of a struct, those with type Cell<T> or RefCell<T>
+to be modified using a normal reference.
+
+### Box<T>
 In C++ we also have `std::unique_ptr` and Rust has something similar named Box.
 This is for anything heap based, only the pointer itself is on the stack.
 When the box goes out of scope, the pointer on the stack is cleaned up, as well
 as the value on the heap. This is done by calling the Drop trait.
 
+### Cell
+Allows for shared mutable containers in Rust. So normally you can only have a
+single mutable reference but this allows multiple mutable pointers to the same
+data.
+
+Example: [cell.rs](./snippets/src/cell.rs).
+
+### Ref
+
+### RefCell
+
+### RefMut
+
 ### Rc<T>
-Reference counting type for multiple ownerships
+Reference counting type for multiple ownerships. When you take a new refererence
+using clone() the reference count will be incremented. Internally it uses a
+Cell
 
 ### Ref<T> RefMut<T>
 
