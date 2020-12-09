@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
     #[test]
     fn format_test() {
         let x = 10;
