@@ -15,6 +15,7 @@ mod structs;
 mod clone;
 mod module_path;
 mod hashmap;
+mod owner;
 mod lifetimes;
 mod iterator;
 mod refs;
