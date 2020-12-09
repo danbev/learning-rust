@@ -19,5 +19,6 @@ mod lifetimes;
 mod iterator;
 mod refs;
 mod functions;
+mod generics;
 mod arrays;
 mod cell;
