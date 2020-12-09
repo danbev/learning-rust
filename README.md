@@ -647,25 +647,65 @@ the template type, for example HashMap<_, _>. We might need to specify the type
 of collection Vec, HashMap, but we still want Rust to determine the types the
 collection holds.
 
+### Dynamically sized types (DTS)
+When the sized of types in Rust are known at compile time they implement the
+Sized trait. But not all type's sizes are known at compile type, for example
+an array which is a member of a struct. 
+Unsized structs pointers are double-width (fat-pointers) because they store a
+pointer to the struct data and the size of the struct
+Unsized structs can only have 1 unsized field and it must be the last field in
+the struct
+
+### Sized trait
+Is an autotrait which means that it gets implemented automatically if the trait
+meets certain conditions.
+
+```
+?Sized
+```
+This means optionally sized or maybe sized.
+
+
+trait object pointers are double-width because they store a pointer to the data
+and a pointer to a vtable
 
 ### Intermediate representation
-```console
-$ rustc +nightly -Zunpretty=hir src/simple.rs
-#[prelude_import]
-use ::std::prelude::v1::*;
-#[macro_use]
-extern crate std;
-fn main() {
-              {
-                  ::std::io::_print(::core::fmt::Arguments::new_v1(&["simple example to show IR\n"],
-                                                                   &match () {
-                                                                        () =>
-                                                                        [],
-                                                                    }));
-              };
-          }
+Rust has 3 intermediate representations, High-Level (HIR), Mid-Level (MIR), and
+LLVM IR (Low-Level).
+```
+                 (type checking) (borrow checking) (optimizations)
++------+     +------+     +-------+     +--------+     +--------------+
+|Source|---->|  HIR |---->|  MIR  |---->| LLVM IR|---->| Machine code |
++------+     +------+     +-------+     +--------+     +--------------+
 ```
 
+
+To see these intermediate representations the following command can be used:
+```console
+$ rustc +nightly -Zunpretty=normal main/src/basic.rs
+```
+This will just output the source as-is.
+
+To show expanded macros and syntax extensions:
+```console
+$ rustc +nightly -Zunpretty=expanded main/src/basic.rs
+```
+
+Show High-Level IR with types:
+```console
+$ rustc +nightly -Zunpretty=hir,typed main/src/simple.rs
+```
+
+Show Mid-Level IR:
+```console
+$ rustc +nightly -Zunpretty=mir,typed main/src/simple.rs
+```
+
+Show LLVM IR:
+```console
+$ rustc +nightly --emit llvm-ir main/src/simple.rs
+```
+This will generate a file named `basic.ll`.
 
 ### Building rustc manually
 Build a specific branch
