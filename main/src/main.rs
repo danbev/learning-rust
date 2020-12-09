@@ -45,10 +45,10 @@ mod bajja;
 
 fn main() {
     println!("main...NR={}", NR);
-    let shadowed = 10;
-    let shadowed = "bajja";
-    let shadowed = shadowed.len();
-    println!("shaddowed={}", shadowed);
+    let _shadowed = 10;
+    let _shadowed = "bajja";
+    let _shadowed = _shadowed.len();
+    println!("shaddowed={}", _shadowed);
     printos();
 
     let tup: (i32, u8, f64) = (500, 8, 6.4);
