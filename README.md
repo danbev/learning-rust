@@ -271,6 +271,28 @@ as the value on the heap. This is done by calling the Drop trait.
 Allows for shared mutable containers in Rust. So normally you can only have a
 single mutable reference but this allows multiple mutable pointers to the same
 data.
+Cell is generic so it expects a type to be specified when creating an instance
+of it.
+```rust
+  let something = Something{id: 1, age: Cell::<u32>::new(45)};
+```
+But the type can also be inferred:
+```rust
+  let something = Something{id: 1, age: Cell::new(45)};
+```
+
+Cell::set can be used to set the value in the Cell.
+Cell::get will return a copy of the contained value.
+
+There is no way to get a pointer to the value inside the cell, all function
+that manipulate the contained value done by the Cell. This means that there is
+never any other pointers to the Call value which allows it to be mutated.
+
+Notice that Call does not implement Sync which is declared like this:
+```rust
+impl<T: ?Sized> !Sync for Cell<T> {}
+```
+
 
 Example: [cell.rs](./snippets/src/cell.rs).
 
