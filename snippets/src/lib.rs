@@ -23,3 +23,4 @@ mod functions;
 mod generics;
 mod arrays;
 mod cell;
+mod default;
