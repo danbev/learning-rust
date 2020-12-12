@@ -267,6 +267,9 @@ This is for anything heap based, only the pointer itself is on the stack.
 When the box goes out of scope, the pointer on the stack is cleaned up, as well
 as the value on the heap. This is done by calling the Drop trait.
 
+### UnsafeCell
+
+
 ### Cell
 Allows for shared mutable containers in Rust. So normally you can only have a
 single mutable reference but this allows multiple mutable pointers to the same
@@ -309,6 +312,19 @@ Cell
 
 ### Ref<T> RefMut<T>
 
+
+### Sync
+Is a trait that specifies that pointer/reference to this type can be shared
+between threads. If this should be prohibited the one can use !Sync.
+
+To support access from multiple threads:
+```rust
+impl<T> Sync for Cell<T> {}
+```
+And to disable:
+```rust
+impl<T> !Sync for Cell<T> {}
+```
 
 ### Structs
 We can declare a struct like this:
