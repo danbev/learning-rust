@@ -43,6 +43,7 @@ Run a single test
 ```
 $ cargo test boxing::tests::boxing_test
 ```
+The above tests is in the crate boxing, and in the module tests.
 
 Ignore a test:
 ```rust
@@ -172,10 +173,10 @@ $ readelf -s  target/debug/libsnippets.rlib | rustfilt
 ```
 
 ### use
-Is used to bring module into scope so that we don't have to use the whole
+Is used to bring a module into scope so that we don't have to use the whole
 path for it (similar to `using` in C++ I guess):
 ```rust
-use crate::module_path::something_private::private_function;                
+use crate::module_path::something_private::private_function;
 ```
 And after this we can just call `private_function();`. This also works with
 a wildcard so the above could have been written as:
@@ -219,7 +220,7 @@ that runs tests `target/debug/build/wasmtime-cli-83cc8a2a072b3d0d/out/wast_tests
 Similar to smart pointers in C++. Smart pointers are ordinary structs that
 implement the Deref and Drop traits.
 
-First, we have references which just borrow the the value they point to:
+First, we have references which just borrows the value it points to:
 ```rust
 let x = 18;
 let y = &x;
@@ -268,7 +269,7 @@ When the box goes out of scope, the pointer on the stack is cleaned up, as well
 as the value on the heap. This is done by calling the Drop trait.
 
 ### UnsafeCell
-
+TODO:
 
 ### Cell
 Allows for shared mutable containers in Rust. So normally you can only have a
@@ -295,7 +296,6 @@ Notice that Call does not implement Sync which is declared like this:
 ```rust
 impl<T: ?Sized> !Sync for Cell<T> {}
 ```
-
 
 Example: [cell.rs](./snippets/src/cell.rs).
 
@@ -388,8 +388,8 @@ use std::prelude::v1::*;
 This contents of v1 can be found [here](https://doc.rust-lang.org/std/prelude/v1/index.html).
 
 ### doc comment
-You can add comments to a crate/module/functions using `//!` which will then be generated
-using `cargo doc`.
+You can add comments to a crate/module/functions using `//!` which will then be
+generated using `cargo doc`.
 ```
 $ cargo doc --open
 ```
@@ -412,7 +412,7 @@ This will install a binary into `$HOME/.cargo/bin`.
 
 ### Cargo extensions
 If a binary in your $PATH is named cargo-something, you can run it as if it was
-a Cargo subcommand by running cargo something. So you could do cargo install to
+a Cargo subcommand by running `cargo something`. So you could do cargo install to
 install an extension and the be able to run it.
 
 Use list to show all commands
@@ -712,8 +712,8 @@ trait object pointers are double-width because they store a pointer to the data
 and a pointer to a vtable
 
 ### Intermediate representation
-Rust has 3 intermediate representations, High-Level (HIR), Mid-Level (MIR), and
-LLVM IR (Low-Level).
+Rust has 3 intermediate representations, `High-Level (HIR)`, `Mid-Level (MIR)`,
+and `LLVM IR (Low-Level)`.
 ```
                  (type checking) (borrow checking) (optimizations)
 +------+     +------+     +-------+     +--------+     +--------------+
@@ -730,17 +730,17 @@ This will just output the source as-is.
 
 To show expanded macros and syntax extensions:
 ```console
-$ rustc +nightly -Zunpretty=expanded main/src/basic.rs
+$ ~/.cargo/bin/rustc +nightly -Zunpretty=expanded main/src/basic.rs
 ```
 
 Show High-Level IR with types:
 ```console
-$ rustc +nightly -Zunpretty=hir,typed main/src/simple.rs
+$ ~/.cargo/bin/rustc +nightly -Zunpretty=hir,typed main/src/simple.rs
 ```
 
 Show Mid-Level IR:
 ```console
-$ rustc +nightly -Zunpretty=mir,typed main/src/simple.rs
+$ ~/.cargo/bin/rustc +nightly -Zunpretty=mir,typed main/src/simple.rs
 ```
 
 Show LLVM IR:
@@ -758,3 +758,9 @@ $ git submodule update --init
 ```
 
 ```
+### binutils
+This will give cargo subcommands like `nm`, `objdump`, `readobj`:
+```console
+$ cargo install cargo-binutils
+```
+
