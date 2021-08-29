@@ -83,7 +83,7 @@ A package contains one or more crate, it packages crates. A crate is a binary
 or a library.
 Each package has a Cargo.toml which describes how to package these crates.
 
-If the package directory contains src/lib.rs Cargo knows this is s library crate
+If the package directory contains src/lib.rs Cargo knows this is a library crate
 with the same name as the package, and src/lib.rs is its crate root. Cargo
 will pass src/lib.rs to rustc to build the library.
 
