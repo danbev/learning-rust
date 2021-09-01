@@ -194,7 +194,7 @@ use crate::module_path::something_private::private_function as bajja;
 
 
 ### Path
-A path how we identify functions/variables in modules. These paths can be absolute
+A path is how we identify functions/variables in modules. These paths can be absolute
 or relative. An absolute path starts from the root; `crate::`, and a relative
 path starts with `self::`, or `super::`. Super is like doing `cd ..` in a terminal.
 
@@ -220,7 +220,7 @@ that runs tests `target/debug/build/wasmtime-cli-83cc8a2a072b3d0d/out/wast_tests
 Similar to smart pointers in C++. Smart pointers are ordinary structs that
 implement the Deref and Drop traits.
 
-First, we have references which just borrows the value it points to:
+First, we have references which just borrow the value it points to:
 ```rust
 let x = 18;
 let y = &x;
@@ -247,6 +247,57 @@ To create a copy you can use `clone`, but note that this will create a copy
 of the data on the heap and the two String instances will point to different
 places on the heap.
 
+### str
+```rust
+let s = "bajja"
+```
+```console
+(&str) $0 = "bajja" {
+  data_ptr = 0x000055555558a034 "bajja"
+  length = 5
+}
+
+(lldb) expr &s
+(&str *) $1 = 0x00007fffffffcc80
+```
+So this is stack allocated.
+```console
+(lldb) disassemble 
+stack`stack::main::h338f866a487ef61e:
+    0x55555555b670 <+0>:  sub    rsp, 0x18
+->  0x55555555b674 <+4>:  lea    rax, [rip + 0x2b985]
+    0x55555555b67b <+11>: mov    qword ptr [rsp], rax
+    0x55555555b67f <+15>: mov    qword ptr [rsp + 0x8], 0x5
+    0x55555555b688 <+24>: mov    dword ptr [rsp + 0x14], 0xa
+    0x55555555b690 <+32>: add    rsp, 0x18
+    0x55555555b694 <+36>: ret
+```
+So we can first see that we are making room on the stack for 24 bytes (0x18),
+the loading the contenst or rip+0x2b985 into $rax and then storing that onto
+the stack
+
+```console
+(lldb) memory read --force -f x -c 5 -s 8 $rsp --num-per-line 1
+0x7fffffffcca0: 0x00007ffff7d96c00
+0x7fffffffcca8: 0x00007ffff7d96c00
+0x7fffffffccb0: 0x0000555555596a70
+0x7fffffffccb8: 0x000055555555b75b
+0x7fffffffccc0: 0x0000555555596a50
+
+(lldb) register read rax
+     rax = 0x0000555555587000  
+(lldb) memory read -f s 0x0000555555587000
+0x555555587000: "bajja"
+```
+Notice that the value in $rax will be saved onto the stack:
+```console
+(lldb) memory read -f x -s 8 -c 1 --num-per-line 1 $rsp
+0x7fffffffcca0: 0x0000555555587000
+```
+The next assembly instruction is storing the contant 5 into the next location
+on the stack, which is the length of the string pointed to be. And this is
+constistent with the contents of a str, there is a pointer to the string, and
+there is the lenght of the string on the stack.
 
 ### String literals
 String literals are stored inside the binary (text or data section?)
@@ -633,7 +684,7 @@ Like C++ templates the compiler can generate a separate copy of an abstraction
 for each way it is implemented.
 
 ### Ownership
-Every value in Rust as a variable called its owner and there can only be one
+Every value in Rust has a variable called its owner and there can only be one
 owner at a time. When the variables goes out of scope the value will be dropped.
 This sounds very much like a unique_ptr in C++ (RAII).
 
@@ -654,7 +705,7 @@ All types that implement the `Copy` trait can be used as above and assigned to
 other variables and the contents will be copied.
 
 #### References
-Alls for passing a value without taking ownership of it, the ownership stays
+Allows for passing a value without taking ownership of it, the ownership stays
 with the calling value outside of a function call for example. This is called
 borrowing. When doing this we can't modify the value as we don't own it. But we
 can specify that it should be a mutable reference and then we can change it.
@@ -690,11 +741,11 @@ of collection Vec, HashMap, but we still want Rust to determine the types the
 collection holds.
 
 ### Dynamically sized types (DTS)
-When the sized of types in Rust are known at compile time they implement the
+When the sizes of types in Rust are known at compile time they implement the
 Sized trait. But not all type's sizes are known at compile type, for example
 an array which is a member of a struct. 
-Unsized structs pointers are double-width (fat-pointers) because they store a
-pointer to the struct data and the size of the struct
+Unsized struct pointers are double-width (fat-pointers) because they store a
+pointer to the struct data and the size of the struct.
 Unsized structs can only have 1 unsized field and it must be the last field in
 the struct
 
@@ -749,6 +800,7 @@ $ rustc +nightly --emit llvm-ir main/src/simple.rs
 ```
 This will generate a file named `basic.ll`.
 
+
 ### Building rustc manually
 Build a specific branch
 ```console
@@ -763,4 +815,5 @@ This will give cargo subcommands like `nm`, `objdump`, `readobj`:
 ```console
 $ cargo install cargo-binutils
 ```
+
 
