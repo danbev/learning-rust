@@ -1,0 +1,11 @@
+[package]
+name = "async"
+version = "0.1.0"
+authors = ["Daniel Bevenius <daniel.bevenius@gmail.com>"]
+edition = "2018"
+
+[workspace]
+
+[dependencies]
+futures = { version = "0.3.*" }
+tokio = {version = "0.2.*", features = ["full"] }
