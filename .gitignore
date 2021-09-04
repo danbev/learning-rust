@@ -3,3 +3,5 @@ target
 basic.ll
 simple.ll
 main/simple
+*.lock
+generics
