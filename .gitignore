@@ -5,3 +5,4 @@ simple.ll
 main/simple
 *.lock
 generics
+error
