@@ -85,9 +85,9 @@ fn lang_start_internal(
 ```
 When using the standard library in Rust this will link with libc and that means
 that start up will follow the [details](https://github.com/danbev/learning-linux-kernel#program-startup)
-I gone through before.
+I've gone through before.
 
-We can override the `start` function and an example can be found in `start.rs`:
+We can override the `start` function and an example can be found in [start.rs](start.rs):
 ```console
 $ rustc -g start.rs 
 $ ./start 
