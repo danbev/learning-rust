@@ -1,6 +1,96 @@
 ## Learning Rust
 The sole purpose of this project is to learn the [Rust](http://www.rust-lang.org/) programming language.
 
+### Startup
+In [start.rs](./start.rs) there is an example of what the `start`
+function. The main function that we write is note the entry of a rust program
+which can be seen when setting a break point in main:
+```console
+(lldb) br s -n main
+(lldb) r
+(lldb) r
+(lldb) bt
+(lldb) bt
+* thread #1, name = 'size', stop reason = breakpoint 1.1
+  * frame #0: 0x000055555555ba74 size`size::main::hda5f8c9912e648ba at size.rs:7:5
+    frame #1: 0x000055555555ba0b size`core::ops::function::FnOnce::call_once::h54200b7b2701b699((null)=(size`size::main::hda5f8c9912e648ba at size.rs:5), (null)=<unavailable>) at function.rs:227:5
+    frame #2: 0x000055555555b96e size`std::sys_common::backtrace::__rust_begin_short_backtrace::hb77fb4371938fee9(f=(size`size::main::hda5f8c9912e648ba at size.rs:5)) at backtrace.rs:125:18
+    frame #3: 0x000055555555b881 size`std::rt::lang_start::_$u7b$$u7b$closure$u7d$$u7d$::hbdbcf615a6363c6a at rt.rs:49:18
+    frame #4: 0x000055555556ccb9 size`std::rt::lang_start_internal::h22ac7383c516f93e [inlined] core::ops::function::impls::_$LT$impl$u20$core..ops..function..FnOnce$LT$A$GT$$u20$for$u20$$RF$F$GT$::call_once::h2aabc384aab89b7b at function.rs:259:13
+    frame #5: 0x000055555556ccb2 size`std::rt::lang_start_internal::h22ac7383c516f93e [inlined] std::panicking::try::do_call::hc5fcacb7a85fc7b1 at panicking.rs:401
+    frame #6: 0x000055555556ccb2 size`std::rt::lang_start_internal::h22ac7383c516f93e [inlined] std::panicking::try::hb5d9603af3abbe3a at panicking.rs:365
+    frame #7: 0x000055555556ccb2 size`std::rt::lang_start_internal::h22ac7383c516f93e [inlined] std::panic::catch_unwind::h98fe6ac3925e64b4 at panic.rs:434
+    frame #8: 0x000055555556ccb2 size`std::rt::lang_start_internal::h22ac7383c516f93e at rt.rs:34
+    frame #9: 0x000055555555b860 size`std::rt::lang_start::h9f00871bee7a1abc(main=(size`size::main::hda5f8c9912e648ba at size.rs:5), argc=1, argv=0x00007fffffffd0b8) at rt.rs:48:5
+    frame #10: 0x000055555555bb1c size`main + 28
+    frame #11: 0x00007ffff7dbf1a3 libc.so.6`.annobin_libc_start.c + 243
+    frame #12: 0x000055555555b76e size`_start + 46
+```
+By looking at the above we can see that `std::rt::lang_start` is called and
+the file is `rt.rs` line 48. Which can be found in the Rust source code
+reporistory in `./library/std/src/rt.rs':
+
+```rust
+#[cfg(not(test))]                                                               
+#[lang = "start"]                                                               
+fn lang_start<T: crate::process::Termination + 'static>(                        
+    main: fn() -> T,                                                            
+    argc: isize,                                                                
+    argv: *const *const u8,                                                     
+) -> isize {                                                                    
+    lang_start_internal(                                                        
+        &move || crate::sys_common::backtrace::__rust_begin_short_backtrace(main).report(),
+        argc,                                                                   
+        argv,                                                                   
+    )                                                                           
+    .into_ok()                                                                  
+}                    
+```
+There are two attributes above which start with the `#` character. `lang` is
+a language item which are special functions and types required internally by
+the compiler.
+
+```rust
+fn lang_start_internal(                                                         
+    main: &(dyn Fn() -> i32 + Sync + crate::panic::RefUnwindSafe),              
+    argc: isize,                                                                
+    argv: *const *const u8,                                                     
+) -> Result<isize, !> {                                                         
+    use crate::{mem, panic, sys, sys_common};                                   
+    let rt_abort = move |e| {                                                   
+        mem::forget(e);                                                         
+        rtabort!("initialization or cleanup bug");                              
+    };                                                                          
+    // Guard against the code called by this function from unwinding outside of the Rust-controlled
+    // code, which is UB. This is a requirement imposed by a combination of how the
+    // `#[lang="start"]` attribute is implemented as well as by the implementation of the panicking
+    // mechanism itself.                                                        
+    //                                                                          
+    // There are a couple of instances where unwinding can begin. First is inside of the
+    // `rt::init`, `rt::cleanup` and similar functions controlled by libstd. In those instances a
+    // panic is a libstd implementation bug. A quite likely one too, as there isn't any way to
+    // prevent libstd from accidentally introducing a panic to these functions. Another is from
+    // user code from `main` or, more nefariously, as described in e.g. issue #86030.
+    // SAFETY: Only called once during runtime initialization.                  
+    panic::catch_unwind(move || unsafe { sys_common::rt::init(argc, argv) }).map_err(rt_abort)?;
+    let ret_code = panic::catch_unwind(move || panic::catch_unwind(main).unwrap_or(101) as isize)
+        .map_err(move |e| {                                                     
+            mem::forget(e);                                                     
+            rtprintpanic!("drop of the panic payload panicked");                
+            sys::abort_internal()                                               
+        });                                                                     
+    panic::catch_unwind(sys_common::rt::cleanup).map_err(rt_abort)?;            
+    ret_code                                                                    
+}                                              
+```
+
+```console
+$ rustc -g start.rs 
+$ ./start 
+$ echo $?
+18
+```
+
 ### Installing rust
 Install and use rustup which is similar to nvm.
 
