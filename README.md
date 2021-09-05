@@ -3,7 +3,7 @@ The sole purpose of this project is to learn the [Rust](http://www.rust-lang.org
 
 ### Startup
 In [start.rs](./start.rs) there is an example of what the `start`
-function. The main function that we write is note the entry of a rust program
+function. The main function that we write is not the entry of a rust program
 which can be seen when setting a break point in main:
 ```console
 (lldb) br s -n main
@@ -83,7 +83,11 @@ fn lang_start_internal(
     ret_code                                                                    
 }                                              
 ```
+When using the standard library in Rust this will link with libc and that means
+that start up will follow the [details](https://github.com/danbev/learning-linux-kernel#program-startup)
+I gone through before.
 
+We can override the `start` function and an example can be found in `start.rs`:
 ```console
 $ rustc -g start.rs 
 $ ./start 
@@ -389,6 +393,24 @@ on the stack, which is the length of the string pointed to be. And this is
 constistent with the contents of a str, there is a pointer to the string, and
 there is the lenght of the string on the stack.
 
+So notice that the syntax here is `&str`. That is a type of reference which
+as we've seen is a pointer to an array and then a length. So is `str` a
+struct?
+
+library/core/src/str/mod.rs:
+```rust
+#[lang = "str"]                                                                 
+#[cfg(not(test))]                                                               
+impl str { 
+```
+The #[lang = "str"] is an attribute. When the compiler sees `str` in code it
+knows that is should call this implementation.
+This is called a language item.
+
+### lang_items
+
+
+
 ### String literals
 String literals are stored inside the binary (text or data section?)
 ```rust
@@ -583,6 +605,9 @@ current function for the caller to handle. For example:
 ```rust
 let contents = fs::read_to_string(config.filename)?;
 ```
+A panic is not a crash and it is per thread.
+It is possible to catch and intercept the stack unwinding using
+`std::panic::catch_unwind()`
 
 ```rust
 return Ok(());
@@ -603,9 +628,8 @@ Borrows the values from the closure env immutably.
 Mutably borrows values from the closure env and can hence change them.
 
 #### FnOnce trait
-Takes ownership of the values and moves them. Is named once because the closure
+Takes ownership of the values and moves them. Is named Once because the closure
 cannot take ownership of the same variables more than once.
-
 
 
 ### Building rustc from source
@@ -772,6 +796,118 @@ Is an async computation that can produce a value
 Is like an Inteface which can be implemented by multiple types.
 Like C++ templates the compiler can generate a separate copy of an abstraction
 for each way it is implemented.
+
+### Trait objects
+```console
+$ objdump -C --disassemble=trait_object::main trait_object
+
+trait_object:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000007ac0 <trait_object::main>:
+    7ac0:	48 83 ec 18          	sub    $0x18,%rsp
+    7ac4:	48 8d 05 3d c5 02 00 	lea    0x2c53d(%rip),%rax        # 34008 <_fini+0x3fc>
+    7acb:	48 89 44 24 08       	mov    %rax,0x8(%rsp)
+    7ad0:	48 8d 05 31 c5 02 00 	lea    0x2c531(%rip),%rax        # 34008 <_fini+0x3fc>
+    7ad7:	48 89 44 24 10       	mov    %rax,0x10(%rsp)
+
+    7adc:	48 8d 3d 25 c5 02 00 	lea    0x2c525(%rip),%rdi        # 34008 <_fini+0x3fc>
+    7ae3:	48 8d 35 66 8a 03 00 	lea    0x38a66(%rip),%rsi        # 40550 <__dso_handle+0x58>
+    7aea:	e8 31 ff ff ff       	callq  7a20 <trait_object::call_process>
+
+    7aef:	48 8d 3d 12 c5 02 00 	lea    0x2c512(%rip),%rdi        # 34008 <_fini+0x3fc>
+    7af6:	48 8d 35 73 8a 03 00 	lea    0x38a73(%rip),%rsi        # 40570 <__dso_handle+0x78>
+    7afd:	e8 1e ff ff ff       	callq  7a20 <trait_object::call_process>
+
+    7b02:	48 83 c4 18          	add    $0x18,%rsp
+    7b06:	c3                   	retq   
+
+Disassembly of section .fini:
+```
+Notice that we are using instruction relative addresses but what is happening
+is that the address of type is loaded into rdi, then the pointer to the
+vtable, before calling trait_object::call_process.
+
+The memory layout of a trait object looks something like this:
+```
+                                   Once
++--------------+               +-------------+
+| ptr to type  |-------------> |             |
++--------------+               +-------------+
+| ptr to vtable|-----+         vtable Doit for Once      
++--------------+     |         +-------------+ 0
+                     +-------->| ptr to drop | 
+                               +-------------+ 8
+                               |  size       |
+                               +-------------+ 16
+                               |  align      |  
+                               +-------------+ 24
+                               |process ptr  |  
+                               +-------------+ 32
+```
+We can take a look at `call_process`:
+```console
+$ objdump -C --disassemble=trait_object::call_process trait_object
+
+trait_object:     file format elf64-x86-64
+
+Disassembly of section .text:
+
+0000000000007a20 <trait_object::call_process>:
+    7a20:	48 83 ec 18          	sub    $0x18,%rsp
+    7a24:	48 89 7c 24 08       	mov    %rdi,0x8(%rsp)
+    7a29:	48 89 74 24 10       	mov    %rsi,0x10(%rsp)
+    7a2e:	ff 56 18             	callq  *0x18(%rsi)
+    7a31:	48 83 c4 18          	add    $0x18,%rsp
+    7a35:	c3                   	retq   
+
+Disassembly of section .fini:
+```
+The first instruction is making room on the stack for local variables, in this
+case 24 bytes, next the contents of rdi which is the pointer to the type is 
+stored on the stack, followed by storing the vtable pointer. Then rsi (the
+vpointer) is referenced using an offset of 0x18 which is the address of the
+process function.
+
+We verify this below:
+```console
+(lldb) register read rdi rsi
+     rdi = 0x0000555555588008  
+     rsi = 0x0000555555594550  
+
+(lldb) memory read -f x -c 4 -s 8 -l  0x0000555555594550
+0x555555594570: 0x000055555555b920 0x0000000000000000 0x0000000000000001 0x000055555555ba80
+(lldb) disassemble -a 0x000055555555b920
+trait_object`core::ptr::drop_in_place$LT$trait_object..Twice$GT$::h35013cb0c4b55373:
+    0x55555555b920 <+0>: push   rax
+    0x55555555b921 <+1>: mov    qword ptr [rsp], rdi
+    0x55555555b925 <+5>: pop    rax
+    0x55555555b926 <+6>: ret    
+
+(lldb) memory read -f x -c 4 -s 8 -l 1 0x0000555555594550
+0x555555594550: 0x000055555555b910
+0x555555594558: 0x0000000000000000
+0x555555594560: 0x0000000000000001
+0x555555594568: 0x000055555555ba40
+
+(lldb) disassemble -a 0x000055555555ba40
+trait_object`_$LT$trait_object..Once$u20$as$u20$trait_object..Doit$GT$::process::he968e372a4a79e77:
+    0x55555555ba40 <+0>:  sub    rsp, 0x38
+    0x55555555ba44 <+4>:  mov    qword ptr [rsp + 0x30], rdi
+    0x55555555ba49 <+9>:  mov    rdi, rsp
+    0x55555555ba4c <+12>: lea    rsi, [rip + 0x38add]
+    0x55555555ba53 <+19>: mov    edx, 0x1
+    0x55555555ba58 <+24>: lea    rcx, [rip + 0x2c5a9]
+    0x55555555ba5f <+31>: xor    eax, eax
+    0x55555555ba61 <+33>: mov    r8d, eax
+    0x55555555ba64 <+36>: call   0x55555555b940            ; core::fmt::Arguments::new_v1::h00905c6e151ce05e at mod.rs:341
+    0x55555555ba69 <+41>: mov    rdi, rsp
+    0x55555555ba6c <+44>: call   qword ptr [rip + 0x3b0d6] ; _GLOBAL_OFFSET_TABLE_ + 432
+    0x55555555ba72 <+50>: add    rsp, 0x38
+    0x55555555ba76 <+54>: ret    
+```
 
 ### Ownership
 Every value in Rust has a variable called its owner and there can only be one
