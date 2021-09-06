@@ -6,3 +6,4 @@ main/simple
 *.lock
 generics
 error
+trait_object
