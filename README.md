@@ -1716,3 +1716,19 @@ warning: 2 warnings emitted
 
 
 ```
+
+### use self
+```rust
+use std::io::{self, Read, Write, ErrorKind};
+```
+The `self` in this case means that we can use the name of this crate, which is
+`io` as an alias for std::io. So we can write io::Result instead of having to
+write `std::io::Result`.
+
+### self
+When you see a function take a single `&self` this is just syntactic suger for
+```rust
+self: &Self
+```
+This just means that the first argument to a method is an instance of the
+implementing type.
