@@ -909,6 +909,20 @@ macro after {. The body contains match expressions where `ident` is an
 identifier like a function or a variable.
 We can see that if the call is successful then we return Ok(res) where res
 in our case should be a RawFd representing underlying file descriptor created.
+
+So we will now return back from the syscall and have a populated
+Result<Selector> which the function `map` is called on:
+(in src/poll.rs):
+```rust
+pub fn new() -> io::Result<Poll> {
+            sys::Selector::new().map(|selector| Poll {
+                registry: Registry { selector },
+            })
+        }
+```
+And here Mio is mapping the Selector to a new Poll instance and in process it is
+creating a new Registry with the selector that was just created.
+
 __work in progess__
 
 
