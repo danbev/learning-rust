@@ -1,46 +1,48 @@
-use mio::{Events, Interest, Poll, Token};
-use mio::net::{TcpListener};
-use std::io::{self};
-use std::time::Duration;
+//! MIO Example crate
 
-fn main() -> io::Result<()> {
+use mio::{Poll, Token, Interest, event::Source, Events};
+use mio::unix::SourceFd;
+use std::os::unix::io::{AsRawFd, RawFd};
+use std::io::{Read, BufRead};
+
+/// main function for MIO example [`RawFd`][std::os::unix::io::RawFd]
+pub fn main() {
     println!("Metal IO (MIO) example");
-    let mut poll = Poll::new()?;
-    let mut events = Events::with_capacity(128);
 
-    let addr = "127.0.0.1:9000".parse().unwrap();
-    let mut listener = TcpListener::bind(addr)?;
-    println!("Listening to {}", addr);
-    const SERVER: Token = Token(0);
-    poll.registry().register(&mut listener, SERVER, Interest::READABLE)?;
+    let mut poll = match Poll::new() {
+        Ok(poll) => poll,
+        Err(e) => panic!("failed to create Poll instance; err={:?}", e),
+    };
+    // Get a ray pointer to stdin
+    let raw_fd: RawFd = std::io::stdin().as_raw_fd();
+    // Use the raw pointer to create a mutable refernce to a new SourceFd
+    let source: &mut SourceFd =  &mut SourceFd(&raw_fd);
 
-    loop {
-        // Poll the OS for events, waiting at most 100 milliseconds.
-        poll.poll(&mut events, Some(Duration::from_millis(100)))?;
-
-        // Process each event.
-        for event in events.iter() {
-            match event.token() {
-                SERVER => loop {
-                    match listener.accept() {
-                        Ok((_connection, address)) => {
-                            println!("Got a connection from: {}", address);
-                        },
-                        // A "would block error" is returned if the operation
-                        // is not ready, so we'll stop trying to accept
-                        // connections.
-                        Err(ref err) if would_block(err) => break,
-                        Err(err) => return Err(err),
-                    }
-                }
-                Token(_) => {
-                },
-            }
-        }
+    let reg = poll.registry();
+    let token = Token(0);
+    // We can register the source using the registy:
+    //let result = reg.register(source, token, Interest::READABLE);
+    // Or we can register the source using the source itself, passing in the
+    // registry:
+    let result = source.register(reg, token, Interest::READABLE);
+    match result {
+        Ok(()) => println!("Registration successful!"),
+        Err(e) => println!("Registration failed!")
     }
-}
+    // We use Events to retrieve the events we are interested in.
+    let mut events = Events::with_capacity(1);
+    println!("Going to poll for {} Events", events.capacity());
 
-fn would_block(err: &io::Error) -> bool {
-    err.kind() == io::ErrorKind::WouldBlock
+    let stdin = std::io::stdin();
+    let mut iterator = stdin.lock().lines();
+    let _line = iterator.next().unwrap();
+
+
+    // So we have registered our interest in readable events for stdin, now
+    // we need to get them. We want to poll for these events:
+    let poll_result = poll.poll(&mut events, None);
+    for event in &events {
+        println!("event.token: {:?}", event.token());
+    }
 }
 

@@ -6,5 +6,12 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+#default = []
+#os-poll = []
+#os-ext = ["os-poll"]
+#net = []
+
 [dependencies]
-mio = { version = "0.7.0", features = ["os-poll", "tcp"] }
+mio = { version = "0.7.0", features = ["os-poll", "net", "tcp", "os-ext"] }
+libc = "0.2.86"
