@@ -9,3 +9,7 @@ error
 trait_object
 macro
 result
+syscall
+closures
+enum
+future
