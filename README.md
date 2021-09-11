@@ -1732,3 +1732,11 @@ self: &Self
 ```
 This just means that the first argument to a method is an instance of the
 implementing type.
+
+### Unit struct
+This is a struct without any members:
+```rust
+struct Something;
+```
+This will be a new type but of now size so would be a noop in a program.
+These are called zero sized types (ZST)s.
