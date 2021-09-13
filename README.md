@@ -2,34 +2,143 @@
 The sole purpose of this project is to learn the [Rust](http://www.rust-lang.org/) programming language.
 
 ### Startup
-In [start.rs](./start.rs) there is an example of what the `start`
-function. The main function that we write is not the entry of a rust program
-which can be seen when setting a break point in main:
-```console
-(lldb) br s -n main
-(lldb) r
-(lldb) r
-(lldb) bt
-(lldb) bt
-* thread #1, name = 'size', stop reason = breakpoint 1.1
-  * frame #0: 0x000055555555ba74 size`size::main::hda5f8c9912e648ba at size.rs:7:5
-    frame #1: 0x000055555555ba0b size`core::ops::function::FnOnce::call_once::h54200b7b2701b699((null)=(size`size::main::hda5f8c9912e648ba at size.rs:5), (null)=<unavailable>) at function.rs:227:5
-    frame #2: 0x000055555555b96e size`std::sys_common::backtrace::__rust_begin_short_backtrace::hb77fb4371938fee9(f=(size`size::main::hda5f8c9912e648ba at size.rs:5)) at backtrace.rs:125:18
-    frame #3: 0x000055555555b881 size`std::rt::lang_start::_$u7b$$u7b$closure$u7d$$u7d$::hbdbcf615a6363c6a at rt.rs:49:18
-    frame #4: 0x000055555556ccb9 size`std::rt::lang_start_internal::h22ac7383c516f93e [inlined] core::ops::function::impls::_$LT$impl$u20$core..ops..function..FnOnce$LT$A$GT$$u20$for$u20$$RF$F$GT$::call_once::h2aabc384aab89b7b at function.rs:259:13
-    frame #5: 0x000055555556ccb2 size`std::rt::lang_start_internal::h22ac7383c516f93e [inlined] std::panicking::try::do_call::hc5fcacb7a85fc7b1 at panicking.rs:401
-    frame #6: 0x000055555556ccb2 size`std::rt::lang_start_internal::h22ac7383c516f93e [inlined] std::panicking::try::hb5d9603af3abbe3a at panicking.rs:365
-    frame #7: 0x000055555556ccb2 size`std::rt::lang_start_internal::h22ac7383c516f93e [inlined] std::panic::catch_unwind::h98fe6ac3925e64b4 at panic.rs:434
-    frame #8: 0x000055555556ccb2 size`std::rt::lang_start_internal::h22ac7383c516f93e at rt.rs:34
-    frame #9: 0x000055555555b860 size`std::rt::lang_start::h9f00871bee7a1abc(main=(size`size::main::hda5f8c9912e648ba at size.rs:5), argc=1, argv=0x00007fffffffd0b8) at rt.rs:48:5
-    frame #10: 0x000055555555bb1c size`main + 28
-    frame #11: 0x00007ffff7dbf1a3 libc.so.6`.annobin_libc_start.c + 243
-    frame #12: 0x000055555555b76e size`_start + 46
-```
-By looking at the above we can see that `std::rt::lang_start` is called and
-the file is `rt.rs` line 48. Which can be found in the Rust source code
-reporistory in `./library/std/src/rt.rs':
+In [main.rs](./startup/src/main.rs) is used in this section to walkthrough the
+startup of a Rust program.
 
+The main function that we write is not the entry of a rust program which can be
+seen by inspecting the `start address` using objdump:
+```console
+$ objdump -f ./target/debug/startup 
+
+./target/debug/startup:     file format elf64-x86-64
+architecture: i386:x86-64, flags 0x00000150:
+HAS_SYMS, DYNAMIC, D_PAGED
+start address 0x0000000000007540
+```
+And we can see the function name of that address using:
+```console
+$ objdump -Cwd ./target/debug/startup | grep 0000000000007540
+0000000000007540 <_start>:
+```
+
+So lets set a break point on that `_start`:
+```console
+$ rust-lldb --  ./target/debug/startup
+(lldb) br s -n _start
+Breakpoint 1: where = startup`_start, address = 0x0000000000007540
+(lldb) r
+(lldb) dis -F att
+startup`_start:
+->  0x55555555b540 <+0>:  endbr64 
+    0x55555555b544 <+4>:  xorl   %ebp, %ebp
+    0x55555555b546 <+6>:  movq   %rdx, %r9
+    0x55555555b549 <+9>:  popq   %rsi
+    0x55555555b54a <+10>: movq   %rsp, %rdx
+    0x55555555b54d <+13>: andq   $-0x10, %rsp
+    0x55555555b551 <+17>: pushq  %rax
+    0x55555555b552 <+18>: pushq  %rsp
+    0x55555555b553 <+19>: leaq   0x2a9e6(%rip), %r8        ; __libc_csu_fini
+    0x55555555b55a <+26>: leaq   0x2a96f(%rip), %rcx       ; __libc_csu_init
+    0x55555555b561 <+33>: leaq   0x208(%rip), %rdi         ; main
+    0x55555555b568 <+40>: callq  *0x39612(%rip)
+    0x55555555b56e <+46>: hlt
+(lldb) bt
+* thread #1, name = 'startup', stop reason = breakpoint 1.1
+  * frame #0: 0x000055555555b540 startup`_start
+```
+
+Upon startup only the registers rsp and rdx contain valid data. rdx will
+contain:
+```text
+%rdx         Contains a function pointer to be registered with `atexit'.
+             This is how the dynamic linker arranges to have DT_FINI
+             functions called for shared libraries that have been loaded
+             before this code runs.
+
+%rsp         The stack contains the arguments and environment:
+             0(%rsp)                         argc
+             LP_SIZE(%rsp)                   argv[0]
+             ...
+             (LP_SIZE*argc)(%rsp)            NULL
+             (LP_SIZE*(argc+1))(%rsp)        envp[0]
+             ...
+                                             NULL
+```
+If we inspect rdx we find:
+```console
+(lldb) re r rdx
+     rdx = 0x00007ffff7fdb7b0
+(lldb) memory read -f x -c 1 -s 8 $rdx
+0x7ffff7fdb7b0: 0xe5894855fa1e0ff3
+```
+But that does not look like a memory address and there is no function at that
+location that can be disassembled:
+```console
+(lldb) dis -a 0xe5894855fa1e0ff3
+error: Could not find function bounds for address 0xe5894855fa1e0ff3
+```
+Perhaps this is not used or I'm not understanding how it should be used. The
+docs above refer to libraries that have been loaded before this code runs.
+
+This is rest of the assembly code is setting up argument, 7 of them. 6 are
+passed in registers and one on the stack for the  `__libc_start_main` function:
+```c
+int __libc_start_main(int *(main) (int, char * *, char * *),   // rdi
+                      int argc,                                // rsi
+                      char** ubp_av,                           // rdx
+                      void (*init) (void),                     // rcx
+                      void (*fini) (void),                     // r8
+                      void (*rtld_fini) (void),                // r9
+                      void (* stack_end));                     // stack
+```
+The call `callq  *0x39612(%rip)` is the actual call to this function. Now,
+`__libc_start_main` does a bunch of things but I've documented that in
+[program startup](https://github.com/danbev/learning-linux-kernel#program-startup).
+
+So if we inspect the value of rdi which is the main function that will be called
+by `__libc_start_main` it is:
+```console
+(lldb) register read rdi
+     rdi = 0x000055555555ba50  startup`main
+
+(lldb) dis -F att -a $rdi
+startup`main:
+    0x55555555ba50 <+0>:  pushq  %rax
+    0x55555555ba51 <+1>:  movq   %rsi, %rdx
+    0x55555555ba54 <+4>:  leaq   0x313a2(%rip), %rax       ; __rustc_debug_gdb_scripts_section__
+    0x55555555ba5b <+11>: movb   (%rax), %al
+    0x55555555ba5d <+13>: movslq %edi, %rsi
+    0x55555555ba60 <+16>: leaq   -0x127(%rip), %rdi        ; startup::main::h737faa4c52471c41 at main.rs:3
+    0x55555555ba67 <+23>: callq  0x55555555b870            ; std::rt::lang_start::h06519bdc8ab3e029 at rt.rs:57
+    0x55555555ba6c <+28>: popq   %rcx
+    0x55555555ba6d <+29>: retq 
+```
+So we can see that this is not our main function but one provided by the Rust
+runtime library. If we inspect the generated llvm intermediate representation
+(IR) we can see that a function named `main` is generated for us, and the our
+`main` is named just_main::main. 
+```console
+$ rustc --emit=llvm-ir just-main.rs
+
+; Function Attrs: nonlazybind                                                   
+define i32 @main(i32 %0, i8** %1) unnamed_addr #6 {                             
+top:                                                                            
+  %2 = sext i32 %0 to i64                                                       
+; call std::rt::lang_start                                                      
+  %3 = call i64 @_ZN3std2rt10lang_start17h4bc6989bc23f981bE(void ()* @_ZN9just_main4main17h2bc67db3f4ca1ef7E, i64 %2, i8** %1)
+  %4 = trunc i64 %3 to i32                                                      
+  ret i32 %4                                                                    
+}
+```
+Notice that the argument to std::rt::lang_lang is passed in rdi and that is the
+main that we wrote:
+```console
+    0x55555555ba60 <+16>: leaq   -0x127(%rip), %rdi        ; startup::main::h737faa4c52471c41 at main.rs:3
+    0x55555555ba67 <+23>: callq  0x55555555b870            ; std::rt::lang_start::h06519bdc8ab3e029 at rt.rs:57
+```
+So this is the function that will be called by `__libc_start_main` and as the
+comment says its from the function std::rt::lang_start in
+`library/std/src/rt.rs`.
 ```rust
 #[cfg(not(test))]                                                               
 #[lang = "start"]                                                               
@@ -48,8 +157,29 @@ fn lang_start<T: crate::process::Termination + 'static>(
 ```
 There are two attributes above which start with the `#` character. `lang` is
 a language item which are special functions and types required internally by
-the compiler.
+the compiler. So this is calling `_rust_begin_short_backtrace(main).report(), so
+what does that do?  
+Notice that this is a closure that is passed into `lang_start_internal` and we
+are not calling the funcion `rust_begin_stort_backtrace.
 
+We can find that function in `library/std/src/sys_common/backtrace.rs`:
+```rust
+// Fixed frame used to clean the backtrace with `RUST_BACKTRACE=1`. Note that  
+/// this is only inline(never) when backtraces in libstd are enabled, otherwise 
+/// it's fine to optimize away.
+#[cfg_attr(feature = "backtrace", inline(never))]                               
+pub fn __rust_begin_short_backtrace<F, T>(f: F) -> T                            
+where F: FnOnce() -> T, {                                                                               
+    let result = f();                                                           
+                                                                                
+    // prevent this frame from being tail-call optimised away                   
+    crate::hint::black_box(());                                                 
+                                                                                
+    result                                                                      
+}         
+```
+So that that closure as the first argument, and argc, followed by argv
+`lang_start_internal` will be called (in library/std/src/rt.rs):
 ```rust
 fn lang_start_internal(                                                         
     main: &(dyn Fn() -> i32 + Sync + crate::panic::RefUnwindSafe),              
@@ -73,6 +203,7 @@ fn lang_start_internal(
     // user code from `main` or, more nefariously, as described in e.g. issue #86030.
     // SAFETY: Only called once during runtime initialization.                  
     panic::catch_unwind(move || unsafe { sys_common::rt::init(argc, argv) }).map_err(rt_abort)?;
+
     let ret_code = panic::catch_unwind(move || panic::catch_unwind(main).unwrap_or(101) as isize)
         .map_err(move |e| {                                                     
             mem::forget(e);                                                     
@@ -83,6 +214,93 @@ fn lang_start_internal(
     ret_code                                                                    
 }                                              
 ```
+Note that first sys_common::rt::init(argc, argv) is called which can be found in
+library/std/src/sys_common/rt.rs:
+```rust
+pub unsafe fn init(argc: isize, argv: *const *const u8) {                       
+    unsafe {                                                                    
+        sys::init(argc, argv);                                                  
+                                                                                
+        let main_guard = sys::thread::guard::init();                            
+        // Next, set up the current Thread with the guard information we just   
+        // created. Note that this isn't necessary in general for new threads,  
+        // but we just do this to name the main thread and to give it correct   
+        // info about the stack bounds.                                         
+        let thread = Thread::new(Some("main".to_owned()));                      
+        thread_info::set(main_guard, thread);                                   
+    }                                                                           
+}          
+```
+So first we call `sys::init(argc, argv)` which in our case will be
+std::sys::unit::init and can be found in library/std/src/sys/unix/mod.rs:
+```rust
+pub unsafe fn init(argc: isize, argv: *const *const u8) {                       
+    // The standard streams might be closed on application startup. To prevent  
+    // std::io::{stdin, stdout,stderr} objects from using other unrelated file  
+    // resources opened later, we reopen standards streams when they are closed.
+    sanitize_standard_fds();                                                    
+                                                                                
+    // By default, some platforms will send a *signal* when an EPIPE error         
+    // would otherwise be delivered. This runtime doesn't install a SIGPIPE        
+    // handler, causing it to kill the program, which isn't exactly what we        
+    // want!                                                                    
+    //                                                                          
+    // Hence, we set SIGPIPE to ignore when the program starts up in order         
+    // to prevent this problem.                                                 
+    reset_sigpipe();                                                            
+                                                                                
+    stack_overflow::init();                                                     
+    args::init(argc, argv);    
+    ...
+}
+```
+TODO: Digg into the args setup and the rest of the above init function.
+Moving on to the next call in lang_start_internal which is:
+```rust
+    let ret_code = panic::catch_unwind(move || panic::catch_unwind(main).unwrap_or(101) as isize)
+        .map_err(move |e| {                                                     
+            mem::forget(e);                                                     
+            rtprintpanic!("drop of the panic payload panicked");                
+            sys::abort_internal()                                               
+        });                                                                     
+```
+This is using `catch_undwind` and there is a standalone example
+[unwind.rs](unwind.rs) which might be helpful to take a look at an run to better
+understand what is happening here. Taking this apart a little so it is a little
+easier to understand we are passing a closure to the first call to
+panic::catch_unwind, and this closure will call
+panic::catch_unwind(main).unwrap_or(101) as isize) when it is called.
+catch_unwind will call the closure passed in and return Ok with the result of
+the closure if there is no panic from that call. If there is a panic then
+catch_unwind will return Err(cause). In our this case we are also using
+unwrap_or(101), so if the closure panics then it 101 will be returned by this
+cloure. After that map_err is used to just pass through a Ok result but if the
+result contains Err the closure passed in will be run.
+So this is the point where the main function that we wrote is called which
+was the point of this section!
+
+After that we have:
+```rust
+    panic::catch_unwind(sys_common::rt::cleanup).map_err(rt_abort)?;            
+    ret_code                                                                    
+```
+`library/std/src/sys_common/rt.rs`:
+```rust
+#[cfg_attr(test, allow(dead_code))]                                             
+pub fn cleanup() {                                                              
+    static CLEANUP: Once = Once::new();                                         
+    CLEANUP.call_once(|| unsafe {                                               
+        // Flush stdout and disable buffering.                                  
+        crate::io::cleanup();                                                   
+        // SAFETY: Only called once during runtime cleanup.                     
+        sys::cleanup();                                                         
+    });                                                                         
+}
+```
+
+
+
+
 When using the standard library in Rust this will link with libc and that means
 that start up will follow the [details](https://github.com/danbev/learning-linux-kernel#program-startup)
 I've gone through before.
