@@ -737,6 +737,15 @@ Notice that we create the struct with parentheses and not brackets. These struct
 are called Tuple Structs and are used when you want to have separate types but
 the names of the members is not important. 
 
+A Struct is declaring what data is stored in memory and the sizes of this data
+so that. The size of the above struct would be 4 bytes + 4 bytes for example.
+Structs.
+
+Structs don't have function member like we can in C++ (but not C where we can
+have function pointers to achieve the same thing) but in C++ methods are
+implemented as [free functions](https://github.com/danbev/learning-cpp#function-members)
+and this is very simliar to how rust does things with Traits.
+
 ### Foreign Function Interface
 
 Example can be found in [ffi](./ffi).
