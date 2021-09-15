@@ -19,3 +19,4 @@ unit-struct
 map
 unwind
 arrays
+type-alias
