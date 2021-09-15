@@ -19,5 +19,8 @@ impl Some {
 
 fn main() {
     let s = Some::new();
+    println!("Size of s: {}", std::mem::size_of::<Some>());
+    println!("Size of s.name: {}", std::mem::size_of::<String>());
+    println!("Size of s.age: {}", std::mem::size_of::<i32>());
     s.print();
 }
