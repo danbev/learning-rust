@@ -22,3 +22,4 @@ arrays
 type-alias
 default
 compiler
+never-return
