@@ -2134,3 +2134,99 @@ struct Something;
 ```
 This will be a new type but of now size so would be a noop in a program.
 These are called zero sized types (ZST)s.
+
+
+### rustc_driver
+First thing to do is add the `rustc-dev` component:
+```console
+$ rustup component add rustc-dev llvm-tools-preview
+info: component 'rustc-dev' for target 'x86_64-unknown-linux-gnu' is up to date
+info: downloading component 'llvm-tools-preview'
+info: installing component 'llvm-tools-preview'
+ 21.6 MiB /  21.6 MiB (100 %)  13.7 MiB/s in  1s ETA:  0s
+```
+
+```console
+$ rustc -g compiler.rs
+$ ./compiler 
+./compiler: error while loading shared libraries: libLLVM-12-rust-1.56.0-nightly.so: cannot open shared object file: No such file or directory
+```
+```console
+$ ldd compiler
+	linux-vdso.so.1 (0x00007fffe5f66000)
+	libLLVM-12-rust-1.56.0-nightly.so => not found
+	libgcc_s.so.1 => /usr/lib64/libgcc_s.so.1 (0x00007fe502961000)
+	libpthread.so.0 => /usr/lib64/libpthread.so.0 (0x00007fe502940000)
+	libm.so.6 => /usr/lib64/libm.so.6 (0x00007fe5027fc000)
+	libdl.so.2 => /usr/lib64/libdl.so.2 (0x00007fe5027f5000)
+	libc.so.6 => /usr/lib64/libc.so.6 (0x00007fe502626000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007fe503712000)
+```
+Find the library:
+```console
+$ find ~/.rustup -name libLLVM-12-rust-1.56.0-nightly.so
+```
+And then we can set `LD_LIBRARY_PATH`:
+$ LD_LIBRARY_PATH=~/.rustup/toolchains/nightly-2021-08-03-x86_64-unknown-linux-gnu/lib/ ldd compiler
+	linux-vdso.so.1 (0x00007fff701d6000)
+	libLLVM-12-rust-1.56.0-nightly.so => /home/danielbevenius/.rustup/toolchains/nightly-2021-08-03-x86_64-unknown-linux-gnu/lib/libLLVM-12-rust-1.56.0-nightly.so (0x00007f2dfdf99000)
+	libgcc_s.so.1 => /usr/lib64/libgcc_s.so.1 (0x00007f2dfdf66000)
+	libpthread.so.0 => /usr/lib64/libpthread.so.0 (0x00007f2dfdf45000)
+	libm.so.6 => /usr/lib64/libm.so.6 (0x00007f2dfde01000)
+	libdl.so.2 => /usr/lib64/libdl.so.2 (0x00007f2dfddfa000)
+	libc.so.6 => /usr/lib64/libc.so.6 (0x00007f2dfdc2b000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f2e03ecc000)
+	librt.so.1 => /usr/lib64/librt.so.1 (0x00007f2dfdc1e000)
+	libz.so.1 => /usr/lib64/libz.so.1 (0x00007f2dfdc04000)
+```
+And to run the compiler example:
+```console
+$ LD_LIBRARY_PATH=~/.rustup/toolchains/nightly-2021-08-03-x86_64-unknown-linux-gnu/lib/ ./compiler
+```
+You can export LD_LIBRARY_PATH as well but just don't forget to unset it later
+or you migth run into issues.
+
+### rustc_ast
+This crate contains the AST definition.
+
+### AST Span
+Is used to link a particular AST node back to its source text:
+In the [compiler.rs(./compiler.rs) example our input source looks like this:
+```rust
+   input: r###"fn main() { println!("Bajja{}"); }"###.to_string(),
+```
+And if we take a look at part of the output we can see a few examples of span:
+```console
+$ ./compiler 
+Crate {
+    attrs: [],
+    items: [
+        Item {
+            attrs: [],
+            id: NodeId(4294967040),
+            span: <main.rs>:1:1: 1:35 (#0),  // first line, first column.
+            vis: Visibility {
+                kind: Inherited,
+                span: no-location (#0),
+                tokens: None,
+            },
+            ...
+            TokenStream(
+               [
+                 (
+                     Token(
+                         Token {
+                             kind: Literal(
+                                 Lit {
+                                   kind: Str,
+                                   symbol: "Bajja{}",
+                                   suffix: None,
+                                 },
+                          ),
+                          span: <main.rs>:1:22: 1:31 (#0), // Bajja starts at column 22
+}
+```
+
+###
+Hygiene relates to how to handle names defined within a macro. In particular, a
+hygienic macro system prevents errors due to names introduced within a macro
