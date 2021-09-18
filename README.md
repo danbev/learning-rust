@@ -627,6 +627,17 @@ This is called a language item.
 
 ### lang_items
 
+rustc_hir/src/lang_items.rs:
+```rust
+language_item_table! {                                                          
+//  Variant name,            Name,                     Method name,                Target                  Generic requirements;
+...
+OwnedBox,                    sym::owned_box,           owned_box,                  Target::Struct,         GenericRequirement::Minimum(1);
+..
+
+}
+```
+
 
 
 ### String literals
@@ -648,6 +659,133 @@ In C++ we also have `std::unique_ptr` and Rust has something similar named Box.
 This is for anything heap based, only the pointer itself is on the stack.
 When the box goes out of scope, the pointer on the stack is cleaned up, as well
 as the value on the heap. This is done by calling the Drop trait.
+
+Lets take a simple example, [box.rs](./box.rs) and look at how a create a new
+Box. This is done using the `new`method:
+```rust
+impl<T> Box<T> {                                                                
+    /// Allocates memory on the heap and then places `x` into it.               
+    ///                                                                         
+    /// This doesn't actually allocate if `T` is zero-sized.                    
+    ///                                                                         
+    /// # Examples                                                              
+    ///                                                                         
+    /// ```                                                                     
+    /// let five = Box::new(5);                                                 
+    /// ```                                                                     
+    #[cfg(not(no_global_oom_handling))]                                         
+    #[inline(always)]                                                           
+    #[stable(feature = "rust1", since = "1.0.0")]                               
+    pub fn new(x: T) -> Self {                                                  
+        box x                                                                   
+    }
+```
+I've not seen this syntax before, `box x`. 
+```rust
+#[lang = "owned_box"]                                                           
+#[fundamental]                                                                  
+#[stable(feature = "rust1", since = "1.0.0")]                                   
+pub struct Box<                                                                 
+    T: ?Sized,                                                                  
+    #[unstable(feature = "allocator_api", issue = "32838")] A: Allocator = Global,
+>(Unique<T>, A);
+```
+Notice the usage of a language feature and owned_box so the compiler has
+special logic to handle owned_box's.
+
+Aparently `box x` should be equivalent to:
+```rust
+fn new(x: T) -> Box<T> {
+    use std::alloc::{alloc, handle_alloc_error, Layout};
+
+    unsafe {
+        let ptr = alloc(Layout::new::<T>()).cast::<T>();
+
+        // if allocation failed
+        if ptr.is_null() { handle_alloc_error(Layout::new::<T>()) }
+    
+        ptr.write(x);
+        Box::from_raw(ptr)
+    }
+}
+```
+
+```console
+$ objdump -C --disassemble=box::create_on_heap ./box
+
+./box:     file format elf64-x86-64
+Disassembly of section .text:
+
+0000000000009e60 <box::create_on_heap>:
+    9e60:	48 83 ec 28          	sub    $0x28,%rsp
+    9e64:	48 8d 7c 24 10       	lea    0x10(%rsp),%rdi
+    9e69:	48 8d 35 74 d2 02 00 	lea    0x2d274(%rip),%rsi        # 370e4 <str.0+0x44>
+    9e70:	ba 05 00 00 00       	mov    $0x5,%edx
+    9e75:	e8 46 f9 ff ff       	callq  97c0 <<str as alloc::string::ToString>::to_string>
+    9e7a:	bf 18 00 00 00       	mov    $0x18,%edi
+    9e7f:	be 08 00 00 00       	mov    $0x8,%esi
+    9e84:	e8 37 e0 ff ff       	callq  7ec0 <alloc::alloc::exchange_malloc>
+    9e89:	48 89 c1             	mov    %rax,%rcx
+    9e8c:	48 89 4c 24 08       	mov    %rcx,0x8(%rsp)
+    9e91:	48 8b 4c 24 10       	mov    0x10(%rsp),%rcx
+    9e96:	48 89 08             	mov    %rcx,(%rax)
+    9e99:	48 8b 4c 24 18       	mov    0x18(%rsp),%rcx
+    9e9e:	48 89 48 08          	mov    %rcx,0x8(%rax)
+    9ea2:	48 8b 4c 24 20       	mov    0x20(%rsp),%rcx
+    9ea7:	48 89 48 10          	mov    %rcx,0x10(%rax)
+    9eab:	48 8b 44 24 08       	mov    0x8(%rsp),%rax
+    9eb0:	48 83 c4 28          	add    $0x28,%rsp
+    9eb4:	c3                   	retq   
+```
+And we can take a look at `alloc::alloc::exchange_malloc`:
+```console
+$ objdump -C --disassemble=alloc::alloc::exchange_malloc ./box
+
+./box:     file format elf64-x86-64
+Disassembly of section .text:
+
+0000000000007ec0 <alloc::alloc::exchange_malloc>:
+    7ec0:	48 83 ec 58          	sub    $0x58,%rsp
+    7ec4:	48 89 7c 24 28       	mov    %rdi,0x28(%rsp)
+    7ec9:	48 89 74 24 30       	mov    %rsi,0x30(%rsp)
+    7ece:	e8 bd fb ff ff       	callq  7a90 <core::alloc::layout::Layout::from_size_align_unchecked>
+    7ed3:	48 89 44 24 08       	mov    %rax,0x8(%rsp)
+    7ed8:	48 89 54 24 10       	mov    %rdx,0x10(%rsp)
+    7edd:	48 89 44 24 38       	mov    %rax,0x38(%rsp)
+    7ee2:	48 89 54 24 40       	mov    %rdx,0x40(%rsp)
+    7ee7:	48 8b 54 24 10       	mov    0x10(%rsp),%rdx
+    7eec:	48 8b 74 24 08       	mov    0x8(%rsp),%rsi
+    7ef1:	48 8d 3d 58 f1 02 00 	lea    0x2f158(%rip),%rdi        # 37050 <_fini+0xff8>
+    7ef8:	e8 33 04 00 00       	callq  8330 <<alloc::alloc::Global as core::alloc::Allocator>::allocate>
+    7efd:	48 89 54 24 20       	mov    %rdx,0x20(%rsp)
+    7f02:	48 89 44 24 18       	mov    %rax,0x18(%rsp)
+    7f07:	48 8b 44 24 18       	mov    0x18(%rsp),%rax
+    7f0c:	48 85 c0             	test   %rax,%rax
+    7f0f:	0f 94 c0             	sete   %al
+    7f12:	0f b6 c0             	movzbl %al,%eax
+    7f15:	75 06                	jne    7f1d <alloc::alloc::exchange_malloc+0x5d>
+    7f17:	eb 00                	jmp    7f19 <alloc::alloc::exchange_malloc+0x59>
+    7f19:	eb 21                	jmp    7f3c <alloc::alloc::exchange_malloc+0x7c>
+    7f1b:	0f 0b                	ud2    
+    7f1d:	48 8b 7c 24 18       	mov    0x18(%rsp),%rdi
+    7f22:	48 8b 74 24 20       	mov    0x20(%rsp),%rsi
+    7f27:	48 89 7c 24 48       	mov    %rdi,0x48(%rsp)
+    7f2c:	48 89 74 24 50       	mov    %rsi,0x50(%rsp)
+    7f31:	e8 4a 17 00 00       	callq  9680 <core::ptr::non_null::NonNull<[T]>::as_mut_ptr>
+    7f36:	48 89 04 24          	mov    %rax,(%rsp)
+    7f3a:	eb 15                	jmp    7f51 <alloc::alloc::exchange_malloc+0x91>
+    7f3c:	48 8b 74 24 10       	mov    0x10(%rsp),%rsi
+    7f41:	48 8b 7c 24 08       	mov    0x8(%rsp),%rdi
+    7f46:	48 8d 05 43 ee ff ff 	lea    -0x11bd(%rip),%rax        # 6d90 <alloc::alloc::handle_alloc_error>
+    7f4d:	ff d0                	callq  *%rax
+    7f4f:	0f 0b                	ud2    
+    7f51:	48 8b 04 24          	mov    (%rsp),%rax
+    7f55:	48 83 c4 58          	add    $0x58,%rsp
+    7f59:	c3                   	retq   
+```
+Global::allocate is a method which takes a Layout. A Layout contains the
+requested size and alignement that the program is asking to allocator to find
+and allow for it to use.
 
 ### UnsafeCell
 TODO:
