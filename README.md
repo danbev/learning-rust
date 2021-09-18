@@ -1513,25 +1513,54 @@ This will just output the source as-is.
 
 To show expanded macros and syntax extensions:
 ```console
-$ ~/.cargo/bin/rustc +nightly -Zunpretty=expanded main/src/basic.rs
+$ echo 'fn main(){}' | rustc +nightly --edition=2018 -Zunpretty=expanded just-main.rs 
+#![feature(prelude_import)]
+#[prelude_import]
+use std::prelude::rust_2018::*;
+#[macro_use]
+extern crate std;
+fn main() { }
 ```
+Notice that the rust compiler includes the prelude.
 
 Show High-Level IR with types:
 ```console
-$ ~/.cargo/bin/rustc +nightly -Zunpretty=hir,typed main/src/simple.rs
+$ echo 'fn main(){}' | rustc +nightly --edition=2018 -Zunpretty=hir,typed just-main.rs 
 ```
 
 Show Mid-Level IR:
 ```console
-$ ~/.cargo/bin/rustc +nightly -Zunpretty=mir,typed main/src/simple.rs
+$ echo 'fn main(){}' | rustc +nightly --edition=2018 -Zunpretty=hir,typed just-main.rs
+#[prelude_import]
+use std::prelude::rust_2018::*;
+#[macro_use]
+extern crate std;
+fn main() ({ } as ())
 ```
+Notice that the compiler as not modified the arguments to main asn an empty
+struct.
 
 Show LLVM IR:
 ```console
-$ rustc +nightly --emit llvm-ir main/src/simple.rs
+$ echo 'fn main(){}' | rustc +nightly --emit llvm-ir main/src/simple.rs
 ```
 This will generate a file named `basic.ll`.
 
+### rustc with heredoc
+This is useful when you don't need to save the source in a file:
+```console
+$ rustc -g -o bajja - <<HERE
+fn main() {
+println!("bajja");
+}
+HERE
+$ ./bajja
+```
+Lets say we want to inspect what the compiler generates for some code. 
+```console
+$ rustc +nightly --edition=2018 -Zunpretty=expanded - <<HERE
+
+```
 
 ### Building rustc manually
 Build a specific branch
