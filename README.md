@@ -2230,3 +2230,36 @@ Crate {
 ###
 Hygiene relates to how to handle names defined within a macro. In particular, a
 hygienic macro system prevents errors due to names introduced within a macro
+
+
+### move
+This section takes a look at what a move does, for example
+```rust
+    let s = [0; 1024];
+    let t = s;
+```
+That will compile into:
+```console
+$ objdump -C --disassemble=move::main move
+
+move:     file format elf64-x86-64
+Disassembly of section .text:
+
+00000000000076b0 <move::main>:
+    76b0:	b8 08 20 00 00       	mov    $0x2008,%eax
+    76b5:	e8 0b 15 03 00       	callq  38bc5 <__rust_probestack>
+    76ba:	48 29 c4             	sub    %rax,%rsp
+    76bd:	48 8d 7c 24 08       	lea    0x8(%rsp),%rdi
+    76c2:	31 f6                	xor    %esi,%esi
+    76c4:	ba 00 10 00 00       	mov    $0x1000,%edx
+    76c9:	e8 62 d9 ff ff       	callq  5030 <memset@plt>
+    76ce:	48 8d bc 24 08 10 00 	lea    0x1008(%rsp),%rdi
+    76d5:	00 
+    76d6:	48 8d 74 24 08       	lea    0x8(%rsp),%rsi
+    76db:	ba 00 10 00 00       	mov    $0x1000,%edx
+    76e0:	e8 8b d9 ff ff       	callq  5070 <memcpy@plt>
+    76e5:	48 81 c4 08 20 00 00 	add    $0x2008,%rsp
+    76ec:	c3                   	retq   
+
+Disassembly of section .fini:
+```
