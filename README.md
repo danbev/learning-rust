@@ -1154,10 +1154,95 @@ allow other tasks to be scheduled on the same thread if the current task is
 blocked and cannot make progress.
 
 ### Future
-Is an async computation that can produce a value
+Is an async computation that can produce a value.
+
+A Future is a value that implements the trait std::future::Future. Notice that
+this says that a future is a value and the value it represents is an in-progress
+async computation. A Future in Rust is the computation itself.
+```rust
+use std::pin::Pin;
+use std::task::{Context, Poll};
+
+pub trait Future {
+    type Output;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context)
+        -> Poll<Self::Output>;
+}
+```
+
+Lets take a look at what a future gets expanded into using the example
+[future.rs](./tokio/src/future.rs):
+```console
+$ cd tokio
+$ cargo rustc --bin future -- -Z unpretty=expanded,hygiene
+```
+
+Each usage of the async keyword generates a statemachine from the code block.
+And each .await in that code block will represent a state.
+```rust
+#[tokio::main]
+async fn main() {
+    println!("main: {:?}", thread::current().id());
+    let future = Something{end: Instant::now() + Duration::from_millis(10)};
+    let result = future.await;
+    println!("result: {}", result);
+}
+```
+So the first state would run all the code upto the line with
+`let result = furure.await;`
+```rust
+use std::future::Future;
+use std::pin::Pin;
+use std::task::{Context, Poll};
+use std::time::{Duration, Instant};
+
+enum MainFuture {
+    State0,
+    State1(Something),
+    Terminated,
+}
+
+impl Future for MainFuture {
+    type Output = ();
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<()> {
+        use MainFuture::*;
+        loop {
+            match *self {
+                State0 => {
+                    let future = Something{end: Instant::now() + Duration::from_millis(10)};
+                    *self = State1(future);
+                }
+                State1(ref mut my_future) => {
+                    match Pin::new(my_future).poll(cx) {
+                        Poll::Ready(out) => {
+                            println!("result: {}", result);
+                            *self = Terminated;
+                            return Poll::Ready(());
+                        }
+                        Poll::Pending => {
+                            return Poll::Pending;
+                        }
+                    }
+                }
+                Terminated => {
+                    panic!("future polled after completion")
+                }
+            }
+        }
+    }
+}
+```
+```console
+$ cargo rustc --bin future -- --emit=llvm-ir
+$ find target/ -name '*.ll'
+target/debug/deps/future-07187fee0c7f789c.ll
+```
+
 
 ### Mio (Metal I/O)
-It abstracts aways the underlying systems select/poll implementations, and
+It abstracts away the underlying systems select/poll implementations, and
 enables I/O multipliexing. For some background around I/O models this
 [link](https://github.com/danbev/learning-c#io-models) might be useful.
 
