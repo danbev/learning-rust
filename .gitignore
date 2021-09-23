@@ -25,3 +25,5 @@ compiler
 never-return
 unwrap_or
 move
+refcell
+generator
