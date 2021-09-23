@@ -1320,7 +1320,7 @@ pub type RawFd = raw::c_int;
 
 type c_int = i32;
 ```
-So our selector as an id, a file descriptor (which is gets back from
+So our selector has an id, a file descriptor (which is gets back from
 epoll_create:
 ```c
 int epoll_fd = epoll_create1(0);
@@ -1381,7 +1381,49 @@ This is event looping that uses Mio.
 TODO:
 
 ### Pin
-TODO:
+Take a struct that looks like this:
+```ruts
+struct Something<'a> {
+    val: i32,
+    ptr: &'a i32,
+}
+
+fn main() {
+    let dummy = 10;
+    let val = 8;
+    let mut s = Something{val: val, ptr: &dummy};
+    s.ptr = &s.val;
+    println!("&s.val: {:p}, &s.ptr: {:p}", &s.val, s.ptr);
+}
+```
+```console
+$ rust-lldb pin
+(lldb) br s -n main -f pin.rs
+(lldb) r
+(lldb) expr &s.val
+(int *) $2 = 0x00007fffffffccf0
+(lldb) expr s.ptr
+(int *) $4 = 0x00007fffffffccf0
+
+(lldb) memory read -f x -c 2 -s 8 -l 1 &s
+0x7fffffffcce8: 0x00007fffffffccf0
+0x7fffffffccf0: 0x00007fff00000008
+
+```
+So this would produce something like the following in memory:
+```
+                    +------------------+
+ 0x7fffffffcce8     |0x00007fffffffccf0|
+                    +------------------+
+ 0x7fffffffccf0     |0x00007fff00000008|
+                    +------------------+
+```
+Now what happens if we move our strut into another value?  
+Well, in theory the values would be copied to a new location on the stack. So
+the value in s.val would still be 8, and the value in s.ptr would still be the
+address to the old location on the stack. 
+I've not been able to create a reproducer of this but this migth be because
+it is not allowed.
 
 ### Trait
 Is like an Inteface which can be implemented by multiple types.
