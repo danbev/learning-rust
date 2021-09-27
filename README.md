@@ -1166,8 +1166,7 @@ use std::task::{Context, Poll};
 pub trait Future {
     type Output;
 
-    fn poll(self: Pin<&mut Self>, cx: &mut Context)
-        -> Poll<Self::Output>;
+    fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output>;
 }
 ```
 
@@ -1240,6 +1239,18 @@ $ find target/ -name '*.ll'
 target/debug/deps/future-07187fee0c7f789c.ll
 ```
 
+Lets set a break point in our poll functions:
+```console
+(lldb) expr self
+(core::pin::Pin<future::Something *>) $0 = {
+  pointer = 0x00007fffffffc3d0
+}
+```
+A newly create Future can be moved safely as it just contains a resumption point
+and the argument values to the Future. The body has not yet begun execution so
+nothing as had a chance to borrow these values yet. But when poll is called that
+changes. Remember that we pass the Future to a function like block_on or spawn
+which take the futures by value.
 
 ### Mio (Metal I/O)
 It abstracts away the underlying systems select/poll implementations, and
@@ -1381,6 +1392,18 @@ This is event looping that uses Mio.
 TODO:
 
 ### Pin
+
+pub struct Pin<P> {
+    pointer: P,
+}
+Notice that pointer is not pub but private so we can only access it by using
+methods that this type provides.
+
+Example of creating a new Pin (pinned pointer):
+
+    let p = Pin::new(&10);
+    println!("{:?}", p);
+
 Take a struct that looks like this:
 ```ruts
 struct Something<'a> {
@@ -1424,6 +1447,11 @@ the value in s.val would still be 8, and the value in s.ptr would still be the
 address to the old location on the stack. 
 I've not been able to create a reproducer of this but this migth be because
 it is not allowed.
+
+Now Pin is only of interest where you have types that refer to data items with
+in them selves. If you don't have such a situation the type is Unpin. Unpin
+is an auto trait, that is if the data types only contains members that are
+Unpin your data type will also be Unpin. 
 
 ### Trait
 Is like an Inteface which can be implemented by multiple types.
@@ -1568,6 +1596,15 @@ Allows for passing a value without taking ownership of it, the ownership stays
 with the calling value outside of a function call for example. This is called
 borrowing. When doing this we can't modify the value as we don't own it. But we
 can specify that it should be a mutable reference and then we can change it.
+
+By default we can think of all pointers as const pointers to const data in Rust
+so we can't reassign the pointer itself nor modify what the pointer points to.
+And another difference in Rust is that passing a value copies the value on the
+stack and makes the source variable/data invalid and it cannot be used after
+that pointer. If one needs to be able to continue using the variable the value
+can be passed by reference, &T to a function which can then read but not modify the
+data. If the function needs to modify the data then we can pass it as & mut T.
+
 
 ### Lifetimes
 These are annotations that start with `'` followed by a variable name.
