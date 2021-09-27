@@ -13,4 +13,9 @@ impl Default for Something {
 fn main() {
     let s = Something::default();
     println!("s.one: {}", s.one);
+
+    let one = 1;
+    let s2 = Something{one, ..Something::default()};
+
+    let s3: Something = Default::default();
 }
