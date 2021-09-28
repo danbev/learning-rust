@@ -19,6 +19,13 @@ fn main() {
     let mut s2 = Something{};
     read_only(&s2);
     mut_aswell(&mut s2);
+
+    let x = 10;
+    let y = 10;
+    let rx = &x;
+    let ry = &y;
+    println!("Note that ref == ref follows the references: {}", rx == ry);
+    println!("Use std::ptr::eq(ref, ref) to compare the addresses: {}", std::ptr::eq(rx,ry));
 }
 
 fn give_up(s: Something) {
