@@ -265,16 +265,17 @@ Moving on to the next call in lang_start_internal which is:
         });                                                                     
 ```
 This is using `catch_undwind` and there is a standalone example
-[unwind.rs](unwind.rs) which might be helpful to take a look at an run to better
-understand what is happening here. Taking this apart a little so it is a little
-easier to understand we are passing a closure to the first call to
+[unwind.rs](./unwind.rs) which might be helpful to take a look at and run to
+better understand what is happening here. Taking this apart a little so it is a
+little easier to understand we are passing a closure to the first call to
 panic::catch_unwind, and this closure will call
 panic::catch_unwind(main).unwrap_or(101) as isize) when it is called.
+
 catch_unwind will call the closure passed in and return Ok with the result of
 the closure if there is no panic from that call. If there is a panic then
 catch_unwind will return Err(cause). In our this case we are also using
-unwrap_or(101), so if the closure panics then it 101 will be returned by this
-cloure. After that map_err is used to just pass through a Ok result but if the
+unwrap_or(101), so if the closure panics then 101 will be returned by this
+cloure. After that map_err is used to just pass through an Ok result, but if the
 result contains Err the closure passed in will be run.
 So this is the point where the main function that we wrote is called which
 was the point of this section!
@@ -297,9 +298,6 @@ pub fn cleanup() {
     });                                                                         
 }
 ```
-
-
-
 
 When using the standard library in Rust this will link with libc and that means
 that start up will follow the [details](https://github.com/danbev/learning-linux-kernel#program-startup)
@@ -1254,7 +1252,7 @@ which take the futures by value.
 
 ### Mio (Metal I/O)
 It abstracts away the underlying systems select/poll implementations, and
-enables I/O multipliexing. For some background around I/O models this
+enables I/O multiplexing. For some background around I/O models this
 [link](https://github.com/danbev/learning-c#io-models) might be useful.
 
 Poll is the abstraction of of select()/poll()/epoll()/kqueue()/IOCP() and
@@ -1605,9 +1603,125 @@ that pointer. If one needs to be able to continue using the variable the value
 can be passed by reference, &T to a function which can then read but not modify the
 data. If the function needs to modify the data then we can pass it as & mut T.
 
+For me the best way is to try to remember that these are pointers under the
+hood.
+
+Passing-by-value is really copying that is on the stack, which for a primitive
+value is the data itself. For a pointer type like an array, vec, slice, Box this
+will be the type with one or more slots of of which is a pointer, the others
+slots could be the lenght, capacity, a pointer to a vtable etc.
+
+Passing-by-reference is actually passing a memory address. So instead of copying
+the type on the stack it just passes the memory address the function.
+```rust
+$ objdump -C --disassemble='fn::main' fn
+
+fn:     file format elf64-x86-64
+
+0000000000007780 <fn::main>:
+    7780:	50                   	push   %rax
+    7781:	c7 44 24 04 03 00 00 	movl   $0x3,0x4(%rsp)
+    7788:	00 
+    7789:	48 8d 7c 24 04       	lea    0x4(%rsp),%rdi
+    778e:	e8 dd ff ff ff       	callq  7770 <fn::by_ref>
+    7793:	58                   	pop    %rax
+    7794:	c3                   	retq   
+
+$ objdump -C --disassemble='fn::by_ref' fn
+
+fn:     file format elf64-x86-64
+
+Disassembly of section .text:
+
+0000000000007770 <fn::by_ref>:
+    7770:	50                   	push   %rax
+    7771:	48 89 3c 24          	mov    %rdi,(%rsp)
+    7775:	58                   	pop    %rax
+    7776:	c3                   	retq   
+```
+Notice that the value 3 is moved onto the stack 0x4(%rsp) and the next
+instruction loads the effective address of that location and places it in $rdi
+which is the first argument register.
+
+```rust
+$ objdump -C --disassemble='fn::main' fn
+
+fn:     file format elf64-x86-64
+
+Disassembly of section .text:
+
+0000000000007790 <fn::main>:
+    7790:	50                   	push   %rax
+    7791:	c7 44 24 04 03 00 00 	movl   $0x3,0x4(%rsp)
+    7798:	00 
+    7799:	48 8d 7c 24 04       	lea    0x4(%rsp),%rdi
+    779e:	e8 cd ff ff ff       	callq  7770 <fn::by_ref>
+    77a3:	8b 7c 24 04          	mov    0x4(%rsp),%edi
+    77a7:	e8 d4 ff ff ff       	callq  7780 <fn::by_val>
+    77ac:	58                   	pop    %rax
+    77ad:	c3                   	retq   
+```
+Notice that now we are moving the value in 0x4(%rsp) (not the address) into
+$edi.
+
+Now, how about passing a struct to a function in a similar manner as the two
+examples above. Well, the by_ref is pretty much the same, it will pass the
+address to the first member of the struct in $rdi.
+The by value case is a little more interesting:
+```rust
+$ objdump -C --disassemble='fn::main' fn
+
+fn:     file format elf64-x86-64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+0000000000007790 <fn::main>:
+    7790:	50                   	push   %rax
+    7791:	c7 04 24 03 00 00 00 	movl   $0x3,(%rsp)
+    7798:	c7 44 24 04 04 00 00 	movl   $0x4,0x4(%rsp)
+    779f:	00 
+    77a0:	48 89 e7             	mov    %rsp,%rdi
+    77a3:	e8 c8 ff ff ff       	callq  7770 <fn::by_ref>
+    77a8:	8b 3c 24             	mov    (%rsp),%edi
+    77ab:	8b 74 24 04          	mov    0x4(%rsp),%esi
+    77af:	e8 cc ff ff ff       	callq  7780 <fn::by_val>
+    77b4:	58                   	pop    %rax
+    77b5:	c3                   	retq   
+
+Disassembly of section .fini:
+$ objdump -C --disassemble='fn::by_val' fn
+
+fn:     file format elf64-x86-64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+0000000000007780 <fn::by_val>:
+    7780:	50                   	push   %rax
+    7781:	89 3c 24             	mov    %edi,(%rsp)
+    7784:	89 74 24 04          	mov    %esi,0x4(%rsp)
+    7788:	58                   	pop    %rax
+    7789:	c3                   	retq   
+```
+If we look at main we can see that it first moves the address located on the
+content located on the top of the stack, (%rsp) and placed it in rdi (the first
+argument), then moves the value located at 0x4(%rsp), into rsi, the second
+argument. And if we look at by_val is looks just like a function that takes
+two arguments.
+
 
 ### Lifetimes
 These are annotations that start with `'` followed by a variable name.
+For example `'a` is spoken as 'tick a'. 
 
 ```console
 error[E0597]: `y` does not live long enough
@@ -1629,6 +1743,19 @@ but only if the following are true:
 When we pass a variable as opposed to a reference we are giving up ownership.
 When passing a variable as a reference you are lending it to the function. You
 can pass around as many immutable references as you like with out any issue.
+
+One thing to notes is that lifetimes on function signatures can tell us what
+a function can do with a passed in argument.
+
+The following function cannot store the input reference in a place that would
+outlive the function body (like static storage):
+``rust
+fn something<'a>(input: &'a i32) {
+}
+```
+
+When a function takes a single ref as an argument and returns a single ref then
+Rust assumes that those two refs have the same lifetime.
 
 ### Underscore
 This can be used when one needs to specify a type but can let Rust determine
