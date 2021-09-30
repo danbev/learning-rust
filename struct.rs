@@ -4,8 +4,12 @@ struct Some {
 }
 
 impl Some {
-    fn new() -> Some {
-        Some { name: "Fletch".to_string(), age: 46}
+    fn new() -> Self {
+        Self { name: "Fletch".to_string(), age: 46}
+    }
+
+    fn new_with_args(name: String, age: i32) -> Self {
+        Self {name, age}
     }
 
     fn print(&self) {
@@ -23,4 +27,6 @@ fn main() {
     println!("Size of s.name: {}", std::mem::size_of::<String>());
     println!("Size of s.age: {}", std::mem::size_of::<i32>());
     s.print();
+
+    //let s2 = Some {22, "bajja"};
 }
