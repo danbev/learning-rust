@@ -481,7 +481,6 @@ above):
 The N is for N-Type, and P for P-Type which are the same as in the diode example
 above.
 ```
-```
       +-----+-----+-----+
 E-----|  N  |  P  |  N  |-----C
       +-----+-----+------
