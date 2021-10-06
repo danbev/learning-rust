@@ -299,6 +299,30 @@ an n-type conductor now.
 So that is one way we can increase the connectivity of silicon. But how about
 replacing an atom with something that only has 3 electrons in its valance shell:
 
+So if we hook up a battery to this the free electron will be attracted to the
+positive terminal and the electrons from the negative terminal will be able
+to move in their place through the material (in/through the conduction band):
+```
+                                          
+     Si  [* *]  Si  [* *]  Si  [* *]
+
+     ⌈*⌉       ⌈*⌉         ⌈*⌉
+     ⌊*⌋       ⌊*⌋         ⌊*⌋
+                 *
++--- Si  [* *]  P  [* *]  Si  [* *] <-----------+
+|                                               |
+|    ⌈*⌉       ⌈*⌉         ⌈*⌉                  |
+|    ⌊*⌋       ⌊*⌋         ⌊*⌋                  |
+|                                               |
+|    Si  [* *]  Si  [* *]  Si  [* *]            |
+|                                               |
+|                 |                             |
+|                 ||                            |
++-------------> + || - -------------------------+
+                  |
+```
+It can still bound with the other 3 atoms around it but also has an additional
+
 So lets try with alunminum (Ai):
 ```
                                           [* *] = covalent bond
@@ -317,12 +341,49 @@ So lets try with alunminum (Ai):
 Notice that we have a missing electron so thre is no covalent bond between the
 Ai atom the Ai atom to the right. This is called a p-type semi-conductor. This
 also conducts electricity better than pure silicon so the conductivity goes up.
-But notice that this is not because there are free electrons but instead if
-there are free electrons they would try to fill the holes. So connecting this
-to something that has free electrons would allow for those electrons to move. 
-Hmm I'm not sure about the above, I've read that the holes move but I think that
-is referring to that electrons could move into the hole which would mean that
-there is now a hole somewhere else.
+
+In the case of N-type we know that the electrons are free to flow in the
+conduction band. This is not what happens for P-type, instead the electrons flow
+in the valance band, so if we apply a current electrons will be attracted to
+the positive terminal, hence they will move to holes:
+     Si  [* *]  Si  [* *]  Si  [* *]
+
+     ⌈*⌉       ⌈*⌉         ⌈*⌉
+     ⌊*⌋       ⌊*⌋         ⌊*⌋
+                 *
++--- Ai  x *   Si  [* *]   Si  [* *] <-----------+
+|                                                |
+|    ⌈*⌉       ⌈*⌉         ⌈*⌉                   |
+|    ⌊*⌋       ⌊*⌋         ⌊*⌋                   |
+|                                                |
+|    Si  [* *]  Si  [* *]  Si  [* *]             |
+|                                                |
+|                 |                              |
+|                 ||                             |
++-------------- + || - <-------------------------+
+                  |
+```
+The holes are what allow electrons to flow and this happens in the valance band
+as opposed to n-type doping where the flow happens in the conduction band.
+With a batteri cell attached the electrons will be attracted to the positive
+terminal. There for electrons will fill the holes:
+```
+ x  o  x  x  x
+     <-
+ x  x  o  x  x
+        <-
+ x  x  x  o  x
+           <-
+ x  x  x  x  o
+```
+Now, what I think will  happen is that one electron will "leave" and and one
+will enter:
+```
+x <- o  x  x  x  o <-x
+     o  x  x  x  x 
+```
+And once again the process of the electrons filling the holes will continue and
+a electrons will be transferred/conducted accross the valance band.
 
 Now, lets see what happens if we combine a p-type and an n-type:
 ```
@@ -451,10 +512,13 @@ the PN junktion now. The free electrons still have a force acting upon them that
 wants to move them to the other side, but there is also a force acting in the
 opposite direction. When these forces are equal then no electrons will move over
 from the right side to the left side.
+
 So applying a current to the N side that overcomes the force of the PN junction
 would allow electrons to move through to the P side and beyond if the P-side
-is connected to something. So the flow of electrons can only happen in one
-direction.
+is connected to something. Reversing this process, that is connecting a voltage
+to the anode (P-side) will not cause any (or vary little current to flow). I'm
+taking about electron current here and not convertional current.
+So the flow of electrons can only happen in one direction.
 
 ```
        P                            N
@@ -485,8 +549,8 @@ Notice that this is basically a Diode that can emit light.
     |  
 Anode  Cathode
 ```
-When we connect these the current must flow through the cathode so it should be
-connected to the negative output of the batteri.
+When we connect these the electron current must flow through the cathode so it
+should be connected to the negative output of the batteri.
 
 
 ### Bipolar Junction Transistors.
@@ -511,7 +575,7 @@ E-----|  N  |  P  |  N  |-----C
                B
 E = emitter
 C = collector
-B = Base
+B = base
 ```
 So we would have free electrons in the left and right boxes, and holes in the
 middle box. And notice if we removed the first box we would be left with a
@@ -525,12 +589,7 @@ normal diode:
                B (anode)
 ```
 And the addition of the first N box is basically the reversal of a diode
-
-Notice that as with the diode for current to flow we would have to connect
-E and C to the negative end of cell. And P would connect to the positive.
-
-There are two types of transistors, NPN and PNP types.
-
+TODO: clarify the above with an example.
 
 ### Formal Charge
 ```
