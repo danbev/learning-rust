@@ -223,6 +223,28 @@ connected to four other silicon atoms.
 If a conductor (metal) is heated it becomes less conductive. So metals conduct
 electricity better at colder temperatures.
 
+### Band theory
+```
+Energy
+ ^
+ |                                           +--------------+
+ |                                           | Conduction   |
+ |                       +--------------+    |              |
+ |                       | Conduction   |    +--------------+
+ |   +--------------+    |              |
+     | Conduction   |    +--------------+
+     |--------------|
+     |--------------|    +--------------+    +--------------+
+     | Valancy      |    | Valancy      |    | Valancy      |
+     +--------------+    +--------------+    +--------------+
+     Conductors          Semiconductors      Insulators
+```
+Notice that for conductors the conduction band and the valancy band overlap
+which is why the conduct so well. 
+For semiconductors there is a gap between these two bands so energy is needed
+for electrons to move into the conduction band. This is possible with heat.
+
+
 ### Insulators
 High reisistance to the flow of electricity, which means that their valance
 shell is full and 
