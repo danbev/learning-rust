@@ -346,6 +346,7 @@ In the case of N-type we know that the electrons are free to flow in the
 conduction band. This is not what happens for P-type, instead the electrons flow
 in the valance band, so if we apply a current electrons will be attracted to
 the positive terminal, hence they will move to holes:
+```
      Si  [* *]  Si  [* *]  Si  [* *]
 
      ⌈*⌉       ⌈*⌉         ⌈*⌉
