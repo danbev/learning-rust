@@ -391,13 +391,14 @@ Now, lets see what happens if we combine a p-type and an n-type:
                                           [* *] = covalent bond
                                               x = hole
                                               * = free electron
+         P-type                          N-type
 
  Si  [* *]  Si  [* *]  Si    |  |  Si  [* *]  Si  [* *]  Si  [* *]
                              |  |
  ⌈*⌉       ⌈*⌉         ⌈*⌉   |  |  ⌈*⌉       ⌈*⌉         ⌈*⌉
  ⌊*⌋       ⌊*⌋         ⌊*⌋   |  |  ⌊*⌋       ⌊*⌋         ⌊*⌋
-
-                             |  |                * 
+                             |  |                *
+                             |  |                 
  Si  [* *]  Ai  x  *  Si     |  |  Si  [* *]  P  [* *]   Si  [* *]
                              |  |
  ⌈*⌉       ⌈*⌉         ⌈*⌉   |  |  ⌈*⌉       ⌈*⌉         ⌈*⌉
@@ -420,8 +421,199 @@ The free electron would be attracted to fill the hole
                              |  |
  Si  [* *]  Si  [* *]  Si    |  |   Si  [* *]  Si  [* *]  Si  [* *]
 ```
-So the right side was negatively charged before the move as it had a free
-electron. 
+One thing that I was missing is that even though there is an extra electron,
+the Ai has an additional proton (remember that atoms have the same number of
+proton and electrons) so that side is neutral, both sides are to begin with.
+
+And a hole can also move to the n-type side. This will create an area between
+these two where there are now extra electrons, or any extra holes, so there
+are now charge carriers in this region. This region is called the depletion
+region and it like an insulator.
+```
+                Depletion Region
+            N          ↓       P
+      +----------------+---------------+
+      | * * ** *** * * |  o o oo ooo   |
+      | ** * **  * * * | o o o o o  oo |
+      | * * ** *** *   |o o o o        |
+      | * * ** *** *   |  o   o  o  o o|
+      +----------------+---------------+
+               Depletion Region
+            N          ↓       P
+      +--------------+----+-------------+
+      | * * ** *** * | Si |o o oo ooo   |
+      | ** * **  * * | Si | o o o o  oo |
+      | * * ** *** * | Si |o o o        |
+      | * * ** *** * | Si |o   o  o  o o|
+      +--------------+----+-------------+
+```
+
+Now if we hook up a power source we will not get a current flowing initially as
+the depletion region prevents the flow. But if the batteri has enough voltage,
+like > 0.7v this will overcome the.
+```
+               Depletion Region
+            N          ↓        P
+      +--------------+----+-------------+
+      | * * ** *** * | Si |o o oo ooo   |
+ +--> | ** * **  * * | Si | o o o o  oo |---------+
+ |    | * * ** *** * | Si |o o o        |         |
+ |    | * * ** *** * | Si |o   o  o  o o|         |
+ |    +--------------+----+-------------+         |
+ |                                                |
+ |                   |                            |
+ |              -  | | +                          |
+ +-----------------| |<---------------------------+
+                   | | 
+                     |
+```
+Electrons will enter the n-region and there will be more electrons in that
+region. There will also be electrons (remember there are holes but there are
+also electrons in this region. Those electrons will be attracted to the positive
+terminal and will exit leaving more holes behind. If the batteri has a voltage
+> 0.7 the depletion region will collapse and current can flow.
+
+Now lets hook this up the other way, where the negative terminal is connected
+to the p-type region, and the positive terminal to the n-type region:
+```
+               Depletion Region
+            N          ↓        P
+      +--------------+----+-------------+
+      | * * ** *** * | Si |o o oo ooo   |
+ +----| ** * **  * * | Si | o o o o  oo |<--------+
+ |    | * * ** *** * | Si |o o o        |         |
+ |    | * * ** *** * | Si |o   o  o  o o|         |
+ |    +--------------+----+-------------+         |
+ |                                                |
+ |                 |                              |
+ |              +  | | -                          |
+ +---------------->| |----------------------------+
+                   | | 
+                   | 
+```
+In this case the electrons will fill the holes in the p-region, and electrons
+will leave the n-region, causing the depletion region to become larger:
+```
+               Depletion Region
+            N         ↓           P
+      +---------------------------------+
+      | * * ** **|    Si    |o oo ooo   |
+ +----| ** * **  |    Si    | o o o  oo |<--------+
+ |    | * * ** * |    Si    |o o        |         |
+ |    | * * ** * |    Si    |  o  o  o o|         |
+ |    +--------------+----+-------------+         |
+ |                                                |
+ |                 |                              |
+ |              +  | | -                          |
+ +---------------->| |----------------------------+
+                   | | 
+                   | 
+```
+As the depletion region becomes larger meaning that there are no charge carriers
+in this region this component will act like an insulator. So no current will
+flow.
+
+If we stick an n-type region next to a p-type and then another n-type we get
+the following:
+```
+                    Depletion Regions
+                     |          |
+            N        ↓    P     ↓     N
+      +-------------+-+--------+-+----------+
+      | * * ** *** *| |o o oo o| |* * * * * |
+      | ** * **  *  | | o o o o| |  * *  ** |
+      | * * ** ***  | |o o o   | | *   * *  |
+      | * * ** *** *| |o   o  o| |  * * * * |
+      +-------------+-+--------+-+----------+
+```
+And say we want a current to flow through this thing:
+```
+                    Depletion Regions
+                     |          |
+            N        ↓    P     ↓     N
+      +-------------+-+--------+-+----------+
+      | * * ** *** *| |o o oo o| |* * * * * |
+ +--->| ** * **  *  | | o o o o| |  * *  ** |-----+
+ |    | * * ** **   | |o o o   | | *   * *  |     |
+ |    | * * ** ** * | |o   o  o| |  * * * * |     |
+ |    +-------------+-+--------+-+----------+     |
+ |                                                |
+ |                                                |
+ |                                                |
+ |                                                |
+ |                   |                            |
+ |              -  | | +                          |
+ +-----------------| |<---------------------------+
+                   | | 
+                     |
+```
+Well this will increase number of electrons in the left-most n-type region,
+and some electrons will leave the right-most n-type region but there will not
+be a current flowing. 
+
+Lets try looking up a second power source like this:
+```
+                    Depletion Regions
+                     |          |
+            N        ↓    P     ↓     N
+      +-------------+-+--------+-+----------+
+      | * * ** *** *| |o o oo -| |+ * * * * |
+ +--->| ** * **  *  | | o o o -| |+ * *  ** |-----+
+ |    | * * ** **   | |o o o  -| |+*   * *  |     |
+ | +--| * * ** **  *| |o   o  -| |+ * * * * |     |
+ | |  +-------------+-+--------+-+----------+     |
+ | |                 |     |                      |
+ | |             - | | +   |                      |
+ | +---------------| |-----+                      |
+ |                 | | >0.7v                      |
+ |                   |                            |
+ |                                                |
+ |                   |                            |
+ |              -  | | +                          |
+ +-----------------| |<---------------------------+
+                   | | 
+                     |
+```
+Notice that this extra connection between the left-most n-type and the p-type
+is the same as we hade above where we saw that current would flow through that
+connetion.
+Now, we have electrons entering from both battries. When they make these types
+of components the first n-type region is very heavyly doped. So once this
+second current starts flowing, those extra electrons can now also move through
+into the p-type region. Some of these electrons are going to fill in holes in
+the p-type region, and some are also going to be attracted to the outgoing plus
+terminal of the p-type region. The base is very thin (how they are manufactured)
+and these holes are physically close to the left-most n-type's electrons. That
+depletion region was created when electrons left the n-type into the depletion
+region which caused the n-type region to become positivley charged (remember
+that the number of electrons and protons match up when neutral and removing a
+electron will make the atom postitive). And those electrions that move into
+depletion region cause the p-type region to become negatively charged.
+The electrons that have now started flowing through the p-type region will be
+attracted to the positive right-most n-type region and therefor be able to
+flow through it towards the positive terminal output.
+
+This component is called an NPN bipolar junction transistor:
+```
+        Emitter(N)      Base(P)  Collector(N)
+      +-------------+-+--------+-+----------+
+      | * * ** *** *| |o o oo -| |+ * * * * |
+ +--->| ** * **  *  | | o o o -| |+ * *  ** |-----+
+ |    | * * ** **   | |o o o  -| |+*   * *  |     |
+ | +--| * * ** **  *| |o   o  -| |+ * * * * |     |
+ | |  +-------------+-+--------+-+----------+     |
+ | |                 |     |                      |
+ | |             - | | +   |                      |
+ | +---------------| |-----+                      |
+ |                 | | >0.7v                      |
+ |                   |                            |
+ |                                                |
+ |                   |                            |
+ |              -  | | +                          |
+ +-----------------| |<---------------------------+
+                   | | 
+                     |
+```
 
 Before any movement has occured we have the following Formal Charge for P
 ```
