@@ -1753,7 +1753,7 @@ a function can do with a passed in argument.
 
 The following function cannot store the input reference in a place that would
 outlive the function body (like static storage):
-``rust
+```rust
 fn something<'a>(input: &'a i32) {
 }
 ```
