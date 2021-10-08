@@ -2462,6 +2462,7 @@ Find the library:
 $ find ~/.rustup -name libLLVM-12-rust-1.56.0-nightly.so
 ```
 And then we can set `LD_LIBRARY_PATH`:
+```console
 $ LD_LIBRARY_PATH=~/.rustup/toolchains/nightly-2021-08-03-x86_64-unknown-linux-gnu/lib/ ldd compiler
 	linux-vdso.so.1 (0x00007fff701d6000)
 	libLLVM-12-rust-1.56.0-nightly.so => /home/danielbevenius/.rustup/toolchains/nightly-2021-08-03-x86_64-unknown-linux-gnu/lib/libLLVM-12-rust-1.56.0-nightly.so (0x00007f2dfdf99000)
