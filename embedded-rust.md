@@ -152,6 +152,8 @@ low  0----   ----  ----  ----  ...
 So it starts out at zero, changes to 1 for the same amount of time and then
 repeats like this.
 
+### Serial Peripheral Interface (SPI) 
+
 ### Current
 Is the flow of free electrons
 
@@ -614,6 +616,14 @@ This component is called an NPN bipolar junction transistor:
                    | | 
                      |
 ```
+Alright, so that was the theory now lets see how we can create a circuit
+with such an NPN transistor:
+
+For this example I used as button switch which is connected to the base of the
+transistor:
+![NPN transistor circuit with switch off](./nodes/npn-off.jpg "NPN Transistor with switch off").
+
+![NPN transistor circuit with switch on](./nodes/npn-on.jpg "NPN Transistor with switch on").
 
 Before any movement has occured we have the following Formal Charge for P
 ```
