@@ -269,7 +269,7 @@ Moving on to the next call in lang_start_internal which is:
         });                                                                     
 ```
 This is using `catch_undwind` and there is a standalone example
-[unwind.rs](./unwind.rs) which might be helpful to take a look at and run to
+[unwind.rs](./src/unwind.rs) which might be helpful to take a look at and run to
 better understand what is happening here. Taking this apart a little so it is a
 little easier to understand we are passing a closure to the first call to
 panic::catch_unwind, and this closure will call
@@ -307,7 +307,7 @@ When using the standard library in Rust this will link with libc and that means
 that start up will follow the [details](https://github.com/danbev/learning-linux-kernel#program-startup)
 I've gone through before.
 
-We can override the `start` function and an example can be found in [start.rs](start.rs):
+We can override the `start` function and an example can be found in [start.rs](./src/start.rs):
 ```console
 $ rustc -g start.rs 
 $ ./start 
@@ -662,7 +662,7 @@ This is for anything heap based, only the pointer itself is on the stack.
 When the box goes out of scope, the pointer on the stack is cleaned up, as well
 as the value on the heap. This is done by calling the Drop trait.
 
-Lets take a simple example, [box.rs](./box.rs) and look at how a create a new
+Lets take a simple example, [box.rs](./src/box.rs) and look at how a create a new
 Box. This is done using the `new`method:
 ```rust
 impl<T> Box<T> {                                                                
@@ -2487,7 +2487,7 @@ This crate contains the AST definition.
 
 ### AST Span
 Is used to link a particular AST node back to its source text:
-In the [compiler.rs(./compiler.rs) example our input source looks like this:
+In the [compiler.rs(./src/compiler.rs) example our input source looks like this:
 ```rust
    input: r###"fn main() { println!("Bajja{}"); }"###.to_string(),
 ```
