@@ -4,6 +4,7 @@ The sole purpose of this project is to learn the [Rust](http://www.rust-lang.org
 ### Contents
 1. [Startup](#startup)
 1. [Embedded Rust](./notes/embedded-rust.md)
+1. [Pinning](#pin)
 
 ### Startup
 In [main.rs](./startup/src/main.rs) is used in this section to walkthrough the
