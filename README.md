@@ -1395,20 +1395,21 @@ This is event looping that uses Mio.
 TODO:
 
 ### Pin
-
+```rust
 pub struct Pin<P> {
     pointer: P,
 }
+```
 Notice that pointer is not pub but private so we can only access it by using
 methods that this type provides.
 
 Example of creating a new Pin (pinned pointer):
-
+```rust
     let p = Pin::new(&10);
     println!("{:?}", p);
-
+```
 Take a struct that looks like this:
-```ruts
+```rust
 struct Something<'a> {
     val: i32,
     ptr: &'a i32,
