@@ -630,6 +630,32 @@ to flow:
 
 ![NPN transistor circuit with switch on](./npn-on.jpg "NPN Transistor with switch on")
 
+
+So that is how a NPN Bipolar Junction transistor works and how we can hook it
+up physically. We can use two such transistors:
+
+![AND GATE both off](./npn-and-gate-off.jpg "NPN Transistors as AND gates switched off")
+
+Now, pressing just the left button no current will flow:
+![AND GATE left on](./npn-and-gate-left.jpg "NPN Transistors as AND gate left switched on")
+
+And, pressing just the right button no current will flow:
+![AND GATE left on](./npn-and-gate-right.jpg "NPN Transistors as AND gate right switched on")
+
+But pressing both and current will flow:
+![AND GATE right on](./npn-and-gate-on.jpg "NPN Transistors as AND gate on")
+
+Notice that what we have created here is a AND gate:
+```
+Left button | Right button   LED
+          0 | 0              0 (Off)
+          1 | 0              0 (Off)
+          0 | 1              0 (Off)
+          1 | 1              1 (On)
+```
+
+
+
 Before any movement has occured we have the following Formal Charge for P
 ```
      ⌈*⌉
