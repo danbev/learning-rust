@@ -216,23 +216,22 @@ protocol.
 
 ```
    +-----------------+           +-----------------+
-   | SPI Master  SCLK|-------+-->|SCLK   SPI Slave |
-   |             MOSI|------+--->|MOSI             |
-   |             MISO|<----+-----|MISO             |
+   | SPI         SCLK|-------+-->|SCLK   SPI       |
+   | Controller  COPI|------+--->|COPI   Peripheral|
+   |             CIPO|<----+-----|CIPO             |
    |           SS_bar|---------->|SS_bar           |
    +-----------------+     |||   +-----------------+
                  ^         |||
                  |         |||   +-----------------+
-                 |         ||+-->|SCLK   SPI Slave |
-                 |         |+--->|MOSI             |
-                 |         +-----|MISO             |
+                 |         ||+-->|SCLK   SPI       |
+                 |         |+--->|COPI   Peripheral|
+                 |         +-----|CIPO             |
                  +-------------->|SS_bar           |
                                  +-----------------+
 
 SCLK = SPI Clock
-MISO = Master Input Slave Output
-MOSI = Master Output Slave Input
-MISO = Master Input Slave Output
+CIPO = Controller Input Peripheral Output
+COPI = Controller Output Peripheral Input
 SS   = Slave Select (to select among mulitiple connected slaves like above) 
 ```
 * Full Duplex
