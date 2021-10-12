@@ -24,9 +24,11 @@ them). In contrast Intel both design chips and manufacture them.
 
 Arm has a number of families of chip designs. For example there is the Cortex-M
 family which are mostly used in microcontrollers.
+
 Cortex-M0 is designed for low cost/power usage.
 Cortex-M4 is a middle ground more features/performance than M0 but less
 expensive then M7.
+
 Cortex-M7 is higher cost but has more features and better performance.
 Some additional information about Arm version can be found
 [here](https://github.com/danbev/learning-assembly/tree/master/arm#arm-versions).
@@ -150,9 +152,96 @@ high 1   |   |  |  |  |  |
 low  0----   ----  ----  ----  ...
 ```
 So it starts out at zero, changes to 1 for the same amount of time and then
-repeats like this.
+repeats like this. The clock tell us when the receiver should read from the
+data line. We might say that it should receive when the clock is high but notice
+that the line can be hight for a certain period of time. Instead we say that it
+should read when transitioning from low to high, and this point is called an 
+edge:
+```      ____   ____  ____
+high 1   |   |  |  |  |  |
+         |   |  |  |  |  |    
+low  0----   ----  ----  ----  ...
+         ^   ^
+raising edge +-- fallin edge
+     (from low   (from high
+      to high)    to low)
+```
+This is a single point instead of a region.
+
+So lets say we want to send 5 (101). First we have to let the receiver know that
+we are going to send by setting a wire to high which is sometimes called slave
+select (SS_bar). After this is done we can send bits to the receiver:
+```
+    Sender                   Receiver
+             -
+             |
+             |
+    CLK    --*             > CLK
+
+101 SOUT   --1-------------> RIN  1
+```
+So above when the first raising edge is encountered, remember that the sender
+and receiver share the same clock line so the receiver also knows when this
+happens. When this happens SOUT will become high for the binary digit 1 to be
+sent. This can then be read by the reciever from RIN above and placed into
+a buffer. The next time there is a raising edge encountered (clock tick) another
+bit will be placed in SOUT:
+```
+    Sender                   Receiver
+             ----  -
+             |  |  |
+             |  |  |
+    CLK   ----  ---*       > CLK
+
+10  SOUT   --------0-------> RIN  10
+```
+And so on:
+```
+    Sender                   Receiver
+             ----  ----
+             |  |  |  |
+             |  |  |  |
+    CLK   ----  ----  ---* > CLK
+
+10  SOUT   --------------1-> RIN  101
+```
+I'm not 100% sure about the above but that is my understanding so far. I'm
+still waiting for a real device to try this out and verify.
 
 ### Serial Peripheral Interface (SPI) 
+Is a synchronous serial communication spec developed by Motorola (1980s) and
+used for communicating between microcontrollers and small peripheral devices.
+Note that this is a defacto standard but there is no official standard for this
+protocol.
+
+```
+   +-----------------+           +-----------------+
+   | SPI Master  SCLK|-------+-->|SCLK   SPI Slave |
+   |             MOSI|------+--->|MOSI             |
+   |             MISO|<----+-----|MISO             |
+   |           SS_bar|---------->|SS_bar           |
+   +-----------------+     |||   +-----------------+
+                 ^         |||
+                 |         |||   +-----------------+
+                 |         ||+-->|SCLK   SPI Slave |
+                 |         |+--->|MOSI             |
+                 |         +-----|MISO             |
+                 +-------------->|SS_bar           |
+                                 +-----------------+
+
+SCLK = SPI Clock
+MISO = Master Input Slave Output
+MOSI = Master Output Slave Input
+MISO = Master Input Slave Output
+SS   = Slave Select (to select among mulitiple connected slaves like above) 
+```
+* Full Duplex
+* Synchronous (it uses the clock to sync)
+* 4+ wires (with multiple slaves there will be more than 4 wires)
+* 25 Mbps
+* No ack
+* Low power consumption
+* 20 cm distances
 
 ### Current
 Is the flow of free electrons
