@@ -5,4 +5,4 @@ members = [
     "snippets",
     "hyper-server",
 ]
-exclude = ["mio-example", "crypto", "startup"]
+exclude = ["mio-example", "crypto", "startup", "embedded"]
