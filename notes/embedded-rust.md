@@ -242,6 +242,67 @@ SS   = Slave Select (to select among mulitiple connected slaves like above)
 * Low power consumption
 * 20 cm distances
 
+### Universal Asynchonous Receiver/Transmitter (UART)
+An UART can look something like the following:
+```
+                         +------------+
+                        -|D0  P|S     |
+                        -|D1  A|E     |
+                        -|D2  R|R     |
+                        -|D3  A|I   RX|<--------
+                        -|D4  L|A   TX|-------->
+                        -|D5  L|L     |
+                        -|D6  E|      |
+                        -|D7  L|      |
+                         |     |      |
+                        -|R/W  |      |
+                        -|CLK  |      |
+                        -|INT  |      |
+                         +------------+
+
+```
+
+
+### Inter Integrated Circuit (I²C)
+Only requires two pins.
+```
+   +------------------+           +-----------------+
+   | Controller    SCL|-----------|SCL  Peripheral  |
+   |               SDA|-----------|SDA              |
+   +------------------+           +-----------------+
+ 
+SCL = Serial Clock Line for the clock signal
+SDA = Serial Data line for sending and recieving data
+```
+So we have the usage of a clock so this is a synchronous protocol like SPI.
+
+Data is transported in messages which have a specific format and an address
+is used to identify the destination peripheral:
+```
+   +-+-+-+-+-+-+-+ +---+ +---+  +-+-+-+-+-+-+-+-+
+   | | | | | | | | |R/W| |ACK|  | | | | | | | | |
+   +-+-+-+-+-+-+-+ +---+ +---+  +-+-+-+-+-+-+-+-+
+    Address Frame                      Data Frame
+    (7 or 10 bits)                     (8 bits)
+```
+Communication starts by the SDA (the data line) switches form high voltage
+to low. This is done before the SCL also switches from high to low.
+
+At the end the sending the SDA will switch from low voltage level to high
+`after` the SCL line switches from low to high.
+
+In SPI we had a peripheral select wire (SS) which selected the peripheral we
+want to talk to. Instread in I2C each peripheral has an address. This is
+contained in the address frame which is always first frame after the start bit
+has been set. The controller send this message frame onto the SDA which all
+peripherals connected will see. Each peripheral will compare this to their
+address and do nothing if the address does not match. If the addresses match
+that peripheral sends a low voltage ACK bit back to the controller.
+
+The READ/WRITE bit indicates if the controller wants to send or recieve data
+from the peripheral. If it wants to send then this bit is low (0) and if it
+wants to read it will be a high voltage.
+
 ### Current
 Is the flow of free electrons
 
