@@ -243,24 +243,47 @@ SS   = Slave Select (to select among mulitiple connected slaves like above)
 * 20 cm distances
 
 ### Universal Asynchonous Receiver/Transmitter (UART)
+UART is not a communications protocol like SPI and I2C but instead a physical
+component/circuit in a microcontroller or a standalone integrated circuit.
+It is main purpose is to send and receive serial data.
+
 An UART can look something like the following:
 ```
-                         +------------+
-                        -|D0  P|S     |
-                        -|D1  A|E     |
-                        -|D2  R|R     |
-                        -|D3  A|I   RX|<--------
-                        -|D4  L|A   TX|-------->
-                        -|D5  L|L     |
-                        -|D6  E|      |
-                        -|D7  L|      |
-                         |     |      |
-                        -|R/W  |      |
-                        -|CLK  |      |
-                        -|INT  |      |
-                         +------------+
-
+  Data bus	 +------------+           +------------+      Data bus      
+	    ---->|D0  P|S     |           |    P|S   D0|---->
+            ---->|D1  A|E     |           |    A|E   D1|---->
+            ---->|D2  R|R     |           |    R|R   D2|---->
+            ---->|D3  A|I   RX|<----------|TX  A|A   D3|---->
+            ---->|D4  L|A   TX|---------->|RX  L|L   D4|---->
+            ---->|D5  L|L     |           |    L|    D5|---->
+            ---->|D6  E|      |           |    E|    D6|---->
+            ---->|D7  L|      |           |    L|    D7|---->
+		 |     |      |           |     |      |
+		-|R/W  |      |           |     |   R/W|
+		-|CLK  |      |           |     |   CLK|
+		-|INT  |      |           |     |   INT|
+		 +------------+           +------------+
 ```
+
+An packet on the serial wire (TX->RX) will looks something like this:
+```
+   +-+ +-+-+-+-+-+ +--+  +--+
+   |S| | | | | | | |P |  |ST|
+   +-+ +-+-+-+-+-+ +--+  +--+
+  Start    Data   Parity Stop
+```
+The transimission line (TX) is usually held at a high voltage when not
+trasmitting. To start sending the trasmitting UART will pull the TX line from
+high to low for one clock cycle. When the receiving (RX) UART see this it will
+begin reading the bits in the dataframe at the frequency of the baud rate.
+Notice that the sender will get the data to be sent from the data bus, and
+likewise the reciever will place the received data on the data bus.
+
+So there are only two wires which is a nice property. And there is not clock
+signal required between two UARTs. There is also parity checking which is
+good for reliable communication.
+One thing to note is that the data being sent can be a maxium of 9 bits. 
+The is not way to support multiple peripherals.
 
 
 ### Inter Integrated Circuit (I²C)
