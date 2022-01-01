@@ -2561,3 +2561,17 @@ Disassembly of section .text:
 
 Disassembly of section .fini:
 ```
+
+### Cargo config
+This section contains notes about Cargo's configuration system.
+
+A "personal" configuration file exist in $CARGO_HOME which is usually the users
+home directory on UNIX:
+```
+$HOME/.cargo/config.toml
+```
+Projects can `./cargo/config.toml` files in the root and subdirectores.
+```
+```
+build.target               The default target platform to compile to run.
+```
