@@ -1180,7 +1180,7 @@ $ cd tokio
 $ cargo rustc --bin future -- -Z unpretty=expanded,hygiene
 ```
 
-Each usage of the async keyword generates a statemachine from the code block.
+Each usage of the async keyword generates a state machine from the code block.
 And each .await in that code block will represent a state.
 ```rust
 #[tokio::main]
@@ -1191,8 +1191,8 @@ async fn main() {
     println!("result: {}", result);
 }
 ```
-So the first state would run all the code upto the line with
-`let result = furure.await;`
+So the first state would run all the code up to the line with
+`let result = furure.await;`:
 ```rust
 use std::future::Future;
 use std::pin::Pin;
@@ -1249,11 +1249,11 @@ Lets set a break point in our poll functions:
   pointer = 0x00007fffffffc3d0
 }
 ```
-A newly create Future can be moved safely as it just contains a resumption point
-and the argument values to the Future. The body has not yet begun execution so
-nothing as had a chance to borrow these values yet. But when poll is called that
-changes. Remember that we pass the Future to a function like block_on or spawn
-which take the futures by value.
+A newly created Future can be moved safely as it just contains a resumption
+point and the argument values to the Future. The body has not yet begun
+execution so nothing has had a chance to borrow these values yet. But when poll
+is called that changes. Remember that we pass the Future to a function like
+`block_on` or `spawn` which take the futures by value.
 
 ### Mio (Metal I/O)
 It abstracts away the underlying systems select/poll implementations, and
