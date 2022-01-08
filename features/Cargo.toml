@@ -6,7 +6,8 @@ edition = "2021"
 [dependencies]
 
 [features]
-default = ["something"] # Features are disabled by default
+default = ["something", "bajja"] # Features are disabled by default
 something = []
 doit = []
+bajja = []
 all = ["something", "doit"]
