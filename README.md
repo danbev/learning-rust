@@ -2590,4 +2590,27 @@ something = {version = "0.1.0", optional = true}
 ```
 This will also introduce `something` as a feature which can be used just like
 the features mentioned above and used in `cfg` clauses/expressions.
+We can use dependencies in features by using the name of the dependency:
+```rust
+[dependencies]
+something = {version = "0.1.0", optional = true}
+
+[features]
+all = ["something"]
+```
+Dependencies can enable features using the `features` key:
+```rust
+[dependencies]
+something = {version = "0.1.0", optional = true, features = ["f1", "f2"]}
+```
+And we can disable the default features using `default-features = false`.
+Dependency features can also be enabled in the features table instread of within
+the dependency declaration using the following syntax:
+```rust
+[dependencies]
+something = {version = "0.1.0", optional = true}
+
+[features]
+all = ["something/f1", "something/f2"]
+```
 
