@@ -2583,5 +2583,11 @@ default disables and need to be enabled explicitely.
 We can use `#[cfg(feature = "feature name")]` to conditionally compile parts of
 the code. An example can be found in [features example](./features).
 
-
+Optional dependencies are dependencies that will not be compiled by default:
+```rust
+[dependencies]
+something = {version = "0.1.0", optional = true}
+```
+This will also introduce `something` as a feature which can be used just like
+the features mentioned above and used in `cfg` clauses/expressions.
 
