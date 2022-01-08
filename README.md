@@ -2575,3 +2575,13 @@ Projects can `./cargo/config.toml` files in the root and subdirectores.
 ```
 build.target               The default target platform to compile to run.
 ```
+
+### Cargo features
+Features are specified in the `features` table in Config.toml, and they are by
+default disables and need to be enabled explicitely.
+
+We can use `#[cfg(feature = "feature name")]` to conditionally compile parts of
+the code. An example can be found in [features example](./features).
+
+
+
