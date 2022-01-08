@@ -4,6 +4,11 @@ fn something() {
     println!("with something feature...");
 }
 
+#[cfg(feature = "all")]
+fn something() {
+    println!("with all feature...");
+}
+
 #[cfg(not(feature = "something"))]
 fn something() {
     println!("without something feature...");
