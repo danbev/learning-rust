@@ -46,7 +46,10 @@ trait GenericType {
 
     type Message1<'m>: Sized where String:;
 
-    // Associated type which is bound, also with a default value.
+    // Associated type which is bound by Sized and has a lifetime bound
+    // "Self: 'm" which specifies that any reference to Self will live at 
+    // least as long as 'm (which notice is on the type Message and not on Self.
+    // This type also has a a default value.
     type Message<'m>: Sized where Self: 'm, = ();
 
     fn doit<'m>(&self, msg: Self::Message<'m>) -> ();
