@@ -874,9 +874,9 @@ let c = C(1, 2);
 assert_eq!(c.0, 1);
 assert_eq!(c.1, 2);
 ```
-Notice that we create the struct with parentheses and not brackets. These structs
-are called Tuple Structs and are used when you want to have separate types but
-the names of the members is not important. 
+Notice that we create the struct with parentheses and not brackets. These
+structs are called Tuple Structs and are used when you want to have separate
+types but the names of the members is not important. 
 
 A Struct is declaring what data is stored in memory and the sizes of this data
 so that. The size of the above struct would be 4 bytes + 4 bytes for example.
@@ -2614,3 +2614,6 @@ something = {version = "0.1.0", optional = true}
 all = ["something/f1", "something/f2"]
 ```
 
+
+### Deferred Format (defmt)
+Is a logging framework for constrained devices.
