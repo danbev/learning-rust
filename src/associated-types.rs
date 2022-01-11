@@ -27,7 +27,7 @@ trait GenericWithDefault<T = u32> {
 }
 
 trait AssociatedWithDefault {
-    type T = u32;
+    type T = ();
     fn doit2(&self, t: Self::T) -> ();
 }
 
@@ -35,16 +35,16 @@ struct Something {}
 
 impl AssociatedWithDefault for Something {
     fn doit2(&self, m: Self::T) {
-        println!("AssociatedWithDefault doit. m: {}", m);
+        println!("AssociatedWithDefault doit. m: {:#?}", m);
     }
 }
 
 trait GenericType {
 
-    // Associated type which is unbound.
+    // Associated type which is unbound and with a default type.
     type S1 = ();
 
-    // Associated type which is bound.
+    // Associated type which is bound, also with a default value..
     type Message<'m>: Sized where Self: 'm, = ();
 
     fn doit<'m>(&self, msg: Self::Message<'m>) -> ();
@@ -63,5 +63,5 @@ fn main() {
     let s = Something{};
     let m = 18;
     s.doit(m);
-    s.doit2(m);
+    s.doit2(());
 }
