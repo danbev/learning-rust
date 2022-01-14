@@ -1,0 +1,9 @@
+[package]                                                                       
+edition = "2018"                                                                
+name = "xtask"                                                                  
+version = "0.1.0"                                                               
+                                                                                
+[dependencies]                                                                  
+anyhow = "1.0"                                                                  
+xshell = "0.1"                                                                  
+toml = "0.5"
