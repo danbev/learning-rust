@@ -1598,16 +1598,18 @@ other variables and the contents will be copied.
 #### References
 Allows for passing a value without taking ownership of it, the ownership stays
 with the calling value outside of a function call for example. This is called
-borrowing. When doing this we can't modify the value as we don't own it. But we
-can specify that it should be a mutable reference and then we can change it.
+`borrowing`. When doing this we can't modify the value as we don't own it. But
+we can specify that it should be a mutable reference and then we can change it.
 
 By default we can think of all pointers as const pointers to const data in Rust
-so we can't reassign the pointer itself nor modify what the pointer points to.
+so we can't reassign the pointer itself, nor modify what the pointer points to.
+
 And another difference in Rust is that passing a value copies the value on the
 stack and makes the source variable/data invalid and it cannot be used after
-that pointer. If one needs to be able to continue using the variable the value
-can be passed by reference, &T to a function which can then read but not modify the
-data. If the function needs to modify the data then we can pass it as & mut T.
+that point. If one needs to be able to continue using the variable, the value
+can be passed by reference, `&T` to a function which can then read but not
+modify the data. If the function needs to modify the data then we can pass it
+as & mut T.
 
 For me the best way is to try to remember that these are pointers under the
 hood.
@@ -2572,13 +2574,12 @@ $HOME/.cargo/config.toml
 ```
 Projects can `./cargo/config.toml` files in the root and subdirectores.
 ```
-```
 build.target               The default target platform to compile to run.
 ```
 
 ### Cargo features
 Features are specified in the `features` table in Config.toml, and they are by
-default disables and need to be enabled explicitely.
+default disabled and need to be enabled explicitely.
 
 We can use `#[cfg(feature = "feature name")]` to conditionally compile parts of
 the code. An example can be found in [features example](./features).
