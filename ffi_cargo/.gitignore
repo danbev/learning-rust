@@ -1,0 +1,5 @@
+something
+*.o
+*.so
+Cargo.lock
+target
