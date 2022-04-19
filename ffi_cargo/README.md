@@ -7,7 +7,7 @@ $ cargo build
 
 Running:
 ```console
-$ LD_LIBRARY_PATH=. cargo run
+$ cargo run
     Finished dev [unoptimized + debuginfo] target(s) in 0.00s
      Running `target/debug/ffi_cargo`
 Example of calling a c library.
