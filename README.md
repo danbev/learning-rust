@@ -1597,10 +1597,10 @@ as & mut T.
 For me the best way is to try to remember that these are pointers under the
 hood.
 
-Passing-by-value is really copying that is on the stack, which for a primitive
-value is the data itself. For a pointer type like an array, vec, slice, Box this
-will be the type with one or more slots of of which is a pointer, the others
-slots could be the lenght, capacity, a pointer to a vtable etc.
+Passing-by-value is really copying what is on the stack, which for a primitive
+value is the data itself. For a pointer type like an array, vec, slice, or Box
+this will be the type with one or more slots of of which is a pointer, the
+others slots could be the length, capacity, a pointer to a vtable etc.
 
 Passing-by-reference is actually passing a memory address. So instead of copying
 the type on the stack it just passes the memory address the function.
@@ -2417,6 +2417,9 @@ struct Something;
 This will be a new type but of now size so would be a noop in a program.
 These are called zero sized types (ZST)s.
 
+### Unit type
+`()` is an empty tuple of zero size.
+
 
 ### rustc_driver
 First thing to do is add the `rustc-dev` component:
@@ -2601,3 +2604,29 @@ all = ["something/f1", "something/f2"]
 
 ### Deferred Format (defmt)
 Is a logging framework for constrained devices.
+
+
+### Raw pointers
+
+Example of a mutable raw pointer:
+```rust:
+    let mut x = 18;
+    let r = &mut x as *mut i32;
+    println!("r: {:p}", r);
+    unsafe {
+        println!("*r: {}", *r);
+    };
+}
+```
+
+
+### Casting
+I came a across this syntax which was a little confused about:
+```rust
+    r as *const _ as _
+```
+If I'm reading this correctly we are first casting r to a raw unmutable pointer
+`*const _` and then casting that into something. The something here is `_` which
+is the type placeholder which is us telling Rust to figure out what type this
+should be.
+[raw_pointers.rs](../src/raw_pointers.rs) contains an example.
