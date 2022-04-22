@@ -1136,25 +1136,8 @@ Is where a single OS thread can run multiple tasks. Are not part of the
 overall system, instead the runtime handles the scheduling. Lighter weight than
 native thread and you can create more of them.
 
-### async/await
-Remember that asynchronous programming allows us to run multiple task concurrently
-on the `same` thread. The goal is to reduce the overhead of using multiple threads.
-Threads are supported at the operating system level and are easy to use (perhaps
-minus synchronization issues) but that is not the case for async code which is
-why the language or a library is required.
-Remember that Rust does not have a runtime like JavaScript for example. In
-JavaScript promises can be run when they get created, but in Rust there has to
-be something that does this. This is where the need for an executor for futures
-need to be specified. One that would work is Tokio for example.
 
 
-`async` 
-
-To block and wait for an async function `block_on` can be used which will block
-the current thread. `await` on the other hand will not block the current thread
-but instead will asynchronously wait for the future to complete. So await will
-allow other tasks to be scheduled on the same thread if the current task is
-blocked and cannot make progress.
 
 ### Future
 Is an async computation that can produce a value.
