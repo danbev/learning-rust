@@ -407,7 +407,8 @@ pub struct Spawner {
 What is `not_send`?  
 PhantomData is marker to so that the compiler see it as Spawner is storing
 a raw mutable pointer to (). I'm not understanding this :( The field being
-named `not_send` perhaps relates to preventing it from being Send? 
+named `not_send` perhaps relates to preventing it from being Send?  
+
 Ulf Lilleengen explained this to me and since the type is `*mut ()` is
 automatically !Send so this prevents this a Spawner automatically implementing
 Send which it would otherwise.
@@ -416,7 +417,6 @@ But he also pointed out that this might note be required, for example if we
 comment out the PhantomData field and then pass the executor to another thread:
 ```rust
     let handler = thread::spawn(|| {
-        println!("threadnn....");
         executor.run(init);
     });
 ```
