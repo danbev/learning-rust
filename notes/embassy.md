@@ -344,6 +344,159 @@ when `signal` is called it will be called using something like this:
 ```
 In this the closure takes an argument which is the signaler.
 
+The last thing that `init` does is spawn a new thread but I though it made sense
+to discuss the other parts first and hopefully what this does will make more
+sense now:
+```rust
+  thread::spawn(Self::alarm_thread);                                  
+```
+So after init has run we will have two threads:
+```console
+(gdb) info thread
+  Id   Target Id                                      Frame 
+* 1    Thread 0x7ffff7d7c780 (LWP 280720) "no_macros" embassy::time::driver::set_alarm_callback (alarm=..., 
+    callback=0x555555563860 <core::ops::function::FnOnce::call_once<embassy::executor::arch::{impl#0}::new::{closure#0}, (*mut ())>>, 
+    ctx=0x5555555afa10) at /home/danielbevenius/.cargo/git/checkouts/embassy-9312dcb0ed774b29/da0c252/embassy/src/time/driver.rs:126
+  2    Thread 0x7ffff7d7b640 (LWP 280852) "no_macros" __futex_abstimed_wait_common64 (private=0, cancel=true, abstime=0x7ffff7d7a788, op=137, 
+    expected=0, futex_word=0x5555555afc68) at futex-internal.c:57
+```
+
+Lets see now how an executor is used. It is used by calling the `run` method:
+```rust
+pub fn run(&'static mut self, init: impl FnOnce(Spawner)) -> ! {               
+        init(self.inner.spawner());                                                
+                                                                                   
+        loop {                                                                     
+            unsafe { self.inner.poll() };                                          
+            self.signaler.wait()                                                   
+        }                                                                          
+    }                                      
+```
+Alright, so with the followwing sample code let try to understand what is
+happening:
+```rust
+    let init = |spawner: Spawner| { 
+      println!("spawer init...");
+      spawner.spawn(make_task_storage());
+    };
+    executor.run(init);
+```
+So the first thing that `run` does is call the closer init that we passed in,
+that the argument is taken from calling `spawner` of the Executors raw inner
+Executor:
+```rust
+   pub fn spawner(&'static self) -> super::Spawner {                           
+        super::Spawner::new(self)                                               
+    }  
+
+pub(crate) fn new(executor: &'static raw::Executor) -> Self {                  
+        Self {                                                                     
+            executor,                                                              
+            not_send: PhantomData,                                                 
+        }                                                                          
+    }       
+```
+Spawner is declared as:
+```rust
+pub struct Spawner {                                                               
+    executor: &'static raw::Executor,                                              
+    not_send: PhantomData<*mut ()>,                                                
+}                                                                                  
+```
+<a name="not_send"></a>
+What is `not_send`?  
+PhantomData is marker to so that the compiler see it as Spawner is storing
+a raw mutable pointer to (). I'm not understanding this :( The field being
+named `not_send` perhaps relates to preventing it from being Send? 
+Ulf Lilleengen explained this to me and since the type is `*mut ()` is
+automatically !Send so this prevents this a Spawner automatically implementing
+Send which it would otherwise.
+
+But he also pointed out that this might note be required, for example if we
+comment out the PhantomData field and then pass the executor to another thread:
+```rust
+    let handler = thread::spawn(|| {
+        println!("threadnn....");
+        executor.run(init);
+    });
+```
+The there is an error message like this:
+```console
+error[E0277]: `*mut ()` cannot be sent between threads safely
+   --> src/no_macros.rs:32:19
+    |
+32  |     let handler = thread::spawn(|| {
+    |                   ^^^^^^^^^^^^^ `*mut ()` cannot be sent between threads safely
+    |
+    = help: within `embassy::executor::Executor`, the trait `Send` is not implemented for `*mut ()`
+    = note: required because it appears within the type `embassy::executor::raw::Executor`
+    = note: required because it appears within the type `embassy::executor::Executor`
+    = note: required because of the requirements on the impl of `Send` for `&mut embassy::executor::Executor`
+    = note: 1 redundant requirement hidden
+    = note: required because of the requirements on the impl of `Send` for `&mut &mut embassy::executor::Executor`
+    = note: required because it appears within the type `[closure@src/no_macros.rs:32:33: 35:6]`
+note: required by a bound in `spawn`
+   --> /home/danielbevenius/.rustup/toolchains/nightly-2021-11-06-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/thread/mod.rs:628:8
+    |
+628 |     F: Send + 'static,
+    |        ^^^^ required by this bound in `spawn`
+
+error[E0277]: `*mut TaskHeader` cannot be sent between threads safely
+   --> src/no_macros.rs:32:19
+    |
+32  |     let handler = thread::spawn(|| {
+    |                   ^^^^^^^^^^^^^ `*mut TaskHeader` cannot be sent between threads safely
+    |
+    = help: the trait `Send` is not implemented for `*mut TaskHeader`
+    = note: required because of the requirements on the impl of `Send` for `Cell<*mut TaskHeader>`
+    = note: required because it appears within the type `embassy::executor::raw::timer_queue::TimerQueue`
+    = note: required because it appears within the type `embassy::executor::raw::Executor`
+    = note: required because it appears within the type `embassy::executor::Executor`
+    = note: required because of the requirements on the impl of `Send` for `&mut embassy::executor::Executor`
+    = note: 1 redundant requirement hidden
+    = note: required because of the requirements on the impl of `Send` for `&mut &mut embassy::executor::Executor`
+    = note: required because it appears within the type `[closure@src/no_macros.rs:32:33: 35:6]`
+note: required by a bound in `spawn`
+   --> /home/danielbevenius/.rustup/toolchains/nightly-2021-11-06-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/thread/mod.rs:628:8
+    |
+628 |     F: Send + 'static,
+    |        ^^^^ required by this bound in `spawn`
+
+For more information about this error, try `rustc --explain E0277`.
+error: could not compile `embassy-exploration` due to 2 previous errors
+```
+
+
+
+Anyway, a new Spawner will be returned and this will be passed to our closure.
+And we use the Spawner to spawn a task, which is done using a SpawnToken:
+```rust
+fn make_task_storage() -> SpawnToken<impl ::core::future::Future + 'static> {
+    type F = impl ::core::future::Future + 'static;
+    static new_task: TaskStorage<F> = TaskStorage::new();
+    async fn task() {
+        println!("new_task task...");
+    }
+    TaskStorage::spawn(&new_task, || task())
+}
+```
+
+```rust
+pub struct SpawnToken<F> {                                                      
+    raw_task: Option<NonNull<raw::TaskHeader>>,                                 
+    phantom: PhantomData<*mut F>,                                               
+}
+```
+Notice in this case that the PhantomData is using the generic type which
+was not the case with Spawner above. Also else where in the code base
+PhantomData fields are named `_phantom` or just `phantom`. Why are these
+different for Spawner and Executor?
+
+So
+  
+
+
+
 
 _wip_
 
