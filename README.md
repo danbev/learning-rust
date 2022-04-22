@@ -7,11 +7,11 @@ The sole purpose of this project is to learn the [Rust](http://www.rust-lang.org
 1. [Pinning](#pin)
 
 ### Startup
-In [main.rs](./startup/src/main.rs) is used in this section to walkthrough the
+[main.rs](./startup/src/main.rs) is used in this section to walkthrough the
 startup of a Rust program.
 
-The main function that we write is not the entry of a rust program which can be
-seen by inspecting the `start address` using objdump:
+The main function that we write is not the entry point of a rust program which
+can be seen by inspecting the `start address` using objdump:
 ```console
 $ objdump -f ./target/debug/startup 
 
@@ -52,7 +52,7 @@ startup`_start:
   * frame #0: 0x000055555555b540 startup`_start
 ```
 
-Upon startup only the registers rsp and rdx contain valid data. rdx will
+Upon startup only the registers `rsp` and `rdx` contain valid data. `rdx` will
 contain:
 ```text
 %rdx         Contains a function pointer to be registered with `atexit'.
@@ -100,8 +100,8 @@ The call `callq  *0x39612(%rip)` is the actual call to this function. Now,
 `__libc_start_main` does a bunch of things but I've documented that in
 [program startup](https://github.com/danbev/learning-linux-kernel#program-startup).
 
-So if we inspect the value of rdi which is the main function that will be called
-by `__libc_start_main` it is:
+So if we inspect the value of `rdi` which is the main function that will be
+called by `__libc_start_main` it is:
 ```console
 (lldb) register read rdi
      rdi = 0x000055555555ba50  startup`main
@@ -120,7 +120,7 @@ startup`main:
 ```
 So we can see that this is not our main function but one provided by the Rust
 runtime library. If we inspect the generated llvm intermediate representation
-(IR) we can see that a function named `main` is generated for us, and the our
+(IR) we can see that a function named `main` is generated for us, and that our
 `main` is named just_main::main. 
 ```console
 $ rustc --emit=llvm-ir just-main.rs
