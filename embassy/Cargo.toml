@@ -1,0 +1,21 @@
+[package]
+name = "embassy-exploration"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+embassy = { git = "https://github.com/embassy-rs/embassy.git", features = ["log", "std", "time"] }
+log = "0.4.14"
+env_logger = "0.9.0"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+[[bin]]
+name = "expanded"
+path = "src/main_expanded.rs"
+
+[[bin]]
+name = "no_macros"
+path = "src/no_macros.rs"
