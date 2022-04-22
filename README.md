@@ -2630,3 +2630,35 @@ If I'm reading this correctly we are first casting r to a raw unmutable pointer
 is the type placeholder which is us telling Rust to figure out what type this
 should be.
 [raw_pointers.rs](../src/raw_pointers.rs) contains an example.
+
+
+### Condvar
+[condvar.rs](../src/condvar.rs) contains an example.
+
+### Impl Trait
+An only be used in two locations, as an argument type or as a return type.
+
+### PhantomData
+Is a marker type and consumes no space and is intended to signal to the compiler
+that this our data type, like a struct, acts as though it stores a a value of
+type T, even though it actually does not.
+For example, in the the following case our struct only holds a raw pointer to
+B, but the compiler will see it as if it actually stores a value of that type.
+```rust
+struct PhantomStruct<B> {
+    b: *const B,
+    marker: PhantomData<B>,
+}
+
+fn main() {
+    println!("Phantom Data example");
+    let x = 18;
+    let ps: PhantomStruct<u32> = PhantomStruct {
+        b: &x,
+        marker: PhantomData
+    };
+}
+```
+This is only used for verifying language safety properties.
+
+
