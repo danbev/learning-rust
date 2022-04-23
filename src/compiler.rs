@@ -66,8 +66,8 @@ fn main() {
             let parse = queries.parse().unwrap().take();
             println!("{:#?}", parse);
             // Analyze the program and inspect the types of definitions.
-            /*
             queries.global_ctxt().unwrap().take().enter(|tcx| {
+                /*
                 for (_, item) in &tcx.hir().krate().items() {
                     match item.kind {
                         rustc_hir::ItemKind::Static(_, _, _) | rustc_hir::ItemKind::Fn(_, _, _) => {
@@ -78,8 +78,8 @@ fn main() {
                         _ => (),
                     }
                 }
+                */
             })
-            */
         });
     });
 }

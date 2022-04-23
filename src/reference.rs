@@ -2,6 +2,11 @@
 struct Something {
 }
 
+#[derive(Debug)]
+struct SomethingWithRef<'a> {
+    ref_: &'a i32,
+}
+
 fn main() {
     let mut i = 5;
     let r: &i32 = &i;
@@ -26,6 +31,9 @@ fn main() {
     let ry = &y;
     println!("Note that ref == ref follows the references: {}", rx == ry);
     println!("Use std::ptr::eq(ref, ref) to compare the addresses: {}", std::ptr::eq(rx,ry));
+
+    let sr = SomethingWithRef{ref_: ry};
+    println!("{:?}", sr);
 }
 
 fn give_up(s: Something) {

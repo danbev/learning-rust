@@ -16,4 +16,5 @@ impl Future for SomeTask {
 }
 
 fn main() {
+    let _f = SomeTask{};
 }

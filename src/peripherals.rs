@@ -15,9 +15,10 @@ pub struct Peripherals {
 
 pub trait Board : Sized {
     type Peripherals;
-    type Config;
+    type BoardConfig: Default;
 
-    fn new(peripherals: Self::Peripherals, config: Option<Self::Config>) -> Self;
+    fn new(peripherals: Self::Peripherals) -> Self;
+    fn new_with_config(peripherals: Self::Peripherals, config: BoardConfig) -> Self;
 }
 
 struct DiscoBoard {}
@@ -27,14 +28,13 @@ struct Conf {}
 
 impl Board for DiscoBoard {
     type Peripherals = Pers;
-    type Config = Conf;
+    type BoardConfig = Conf;
 
-    fn new(peripherals: Self::Peripherals, config: Option<Self::Config>) -> Self {
-        if config.is_some() {
+    fn new(peripherals: Self::Peripherals) -> Self {
+        DiscoBoard {}
+    }
 
-        } else {
-
-        }
+    fn new(peripherals: Self::Peripherals, config: Self::BoardConfig>) -> Self {
         DiscoBoard {}
     }
 }

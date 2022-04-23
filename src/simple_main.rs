@@ -2,7 +2,6 @@
 #![feature(lang_items)]
 
 #![no_core]
-#![no_std]
 
 #[cfg(target_os = "linux")]
 #[link(name = "c")]
@@ -13,7 +12,6 @@ extern {}
 pub trait Sized {}
 #[lang = "copy"]
 pub trait Copy {}
-
 
 // `main` isn't the actual entry point, `start` is.
 #[lang = "start"]
