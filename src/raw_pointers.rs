@@ -18,8 +18,13 @@ fn main() {
     println!("{}", std::any::type_name::<()>());
     //println!("{}", std::any::type_name::<T>())
 
-
     let mut x = 18;
+    //let raw: *const i32 = &x as *const i32;
+    let raw: *const i32 = &x;
+    unsafe {
+        println!("raw: {}", *raw);
+    }
+
     let mut r = &mut x as *mut i32;
     
     let y:i32 = 20;
