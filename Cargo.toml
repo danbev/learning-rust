@@ -6,4 +6,7 @@ members = [
     "hyper-server",
 ]
 exclude = ["mio-example", "crypto", "startup", "embedded", "embassy",
-           "features", "drogue-device", "xshell", "ffi_cargo"]
+           "features", "drogue-device", "xshell", "ffi_cargo",
+           "trait_usage/sometrait", "trait_usage/impl1",
+           "trait_usage/impl2", "trait_usage/usage",
+           "trait_usage/driver"]

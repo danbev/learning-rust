@@ -1,0 +1,12 @@
+[package]
+name = "usage"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+driver = {path="../driver"}
+sometrait = {path="../sometrait"}
+impl1 = {path="../impl1"}
+impl2 = {path="../impl2"}
