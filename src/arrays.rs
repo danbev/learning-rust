@@ -15,4 +15,12 @@ fn main() {
     const LENGTH: usize = 2;
     let a:[u32; LENGTH] = [1, 2];
     println!("{:?}", a);
+
+    #[derive(Copy, Clone, Debug)]
+    struct S {
+        id: i32
+    }
+    let s = S{id: 0};
+    let a = [s; 10];
+    println!("{:?}", a);
 }
