@@ -389,6 +389,18 @@ You want to have the rust sources installed:
 $ rustup component add rust-src
 ```
 
+In gdb you might not be able to step into Rust std sources and see an message/
+path like this: 
+```console
+alloc::alloc::exchange_malloc (size=4, align=1) at /rustc/0d1754e8bf6942b4c1d24d7c923438782129ba5a/library/alloc/src/alloc.rs:317
+```
+This can be worked around by adding the following to a `.gdbinit`:
+```console
+set substitute-path '/rustc/0d1754e8bf6942b4c1d24d7c923438782129ba5a' '/home/danielbevenius/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust
+```
+One thing to note is that we might have to update the hash after updating 
+Rust.
+
 ### Crate
 A crate is a binary or library.
 A package can have multiple binary crates by placing files in the src/bin
