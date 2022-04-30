@@ -1,6 +1,6 @@
 
 out/%: src/%.rs | out
-	rustc -o $@ $<
+	rustc -o $@ -g $<
 
 out:
 	@mkdir out
