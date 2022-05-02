@@ -988,5 +988,134 @@ fn make_task_storage() -> SpawnToken<impl ::core::future::Future + 'static> {
 _wip_
 
 
+### TaskStorage
+This type contains only two fields:
+```rust
+pub struct TaskStorage<F: Future + 'static> {
+    raw: TaskHeader,
+    future: UninitCell<F>, // Valid if STATE_SPAWNED
+}
+```
+Creating a new TaskStorage is done with the new constructor function:
+```rust
+pub const fn new() -> Self {
+        Self {
+            raw: TaskHeader::new(),
+            future: UninitCell::uninit(),
+        }
+}
+```
+For example:
+```rust
+    type F = impl ::core::future::Future + 'static;
+    static NEW_TASK: TaskStorage<F> = TaskStorage::new();
+```
+We can take this newly create TaskStorage and pass it to TaskStorage spawn
+```rust
+    let token: SpawnToken<F> = TaskStorage::spawn(&NEW_TASK, || async_function());
+```
+This will first set the state of the TaskHeader to 3
+(STATE_SPAWED | STATE_RUN_QUEUED), and if that succeeds spawn will call
+`spawn_initialized(future)`:
+```rust
+    unsafe fn spawn_initialize(&'static self, future: impl FnOnce() -> F) -> SpawnToken<F> {
+        // Initialize the task
+        self.raw.poll_fn.write(Self::poll);
+        self.future.write(future());
+
+        SpawnToken::new(NonNull::new_unchecked(&self.raw as *const TaskHeader as _))
+    }
+```
+And here we can see that it is setting the TaskHeader's poll_fn to the function
+Self::poll, and setting this TaskStorage's future field to be the future
+returned from calling the passed in `async_function`.
+Now, notice that here a SpawnToken is being returned which is created by
+passing in a pointer to self.raw which is the first field in TaskStorage. At
+first it might seem like we have lost the future which was set here as the
+only thing returned was the SpawnToken and it only has a optional TaskHeader
+field:
+```rust
+  pub struct SpawnToken<F> {                                                         
+      raw_task: Option<NonNull<raw::TaskHeader>>,                                    
+      phantom: PhantomData<*mut F>,                                                  
+  }
+```
+SpawnToken also has TaskHeader as the first field. We are just 
+```console
+(gdb) p &self.raw
+$11 = (*mut embassy::executor::raw::TaskHeader)
+0x5555555bb0c0 <no_macros::main::{{closure}}::NEW_TASK>
+
+(gdb) p &self.future
+$12 = (*mut embassy::executor::raw::util::UninitCell<core::future::from_generator::GenFuture<no_macros::main::{closure#0}::task::{generator#0}>>)
+0x5555555bb0f0 <no_macros::main::{{closure}}::NEW_TASK+48>
+```
+Now, with only using the token we can do this:
+```console
+(gdb) p task
+$15 = core::option::Option<core::ptr::non_null::NonNull<embassy::executor::raw::TaskHeader>>::Some(core::ptr::non_null::NonNull<embassy::executor::raw::TaskHeader> {pointer: 0x5555555bb0c0 <no_macros::main::{{closure}}::NEW_TASK>})
+```
+This allows us to cast a SpawnToken into a TaskStorage and hence be able to
+get access to the Future. This can be seen in `poll`:
+```rust
+unsafe fn poll(p: NonNull<TaskHeader>) {
+        let this = &*(p.as_ptr() as *const TaskStorage<F>);
+
+        let future = Pin::new_unchecked(this.future.as_mut());
+        let waker = waker::from_task(p);
+        let mut cx = Context::from_waker(&waker);
+        match future.poll(&mut cx) {
+            Poll::Ready(_) => {
+                this.future.drop_in_place();
+                this.raw.state.fetch_and(!STATE_SPAWNED, Ordering::AcqRel);
+            }
+            Poll::Pending => {}
+        }
+
+        // the compiler is emitting a virtual call for waker drop, but we know
+        // it's a noop for our waker.
+        mem::forget(waker);
+    }                  
+```
+
+```console
+(gdb) br embassy::executor::raw::TaskStorage<F>::poll
+```
+
+### TaskHeader
+```rust
+pub struct TaskHeader {
+    pub(crate) state: AtomicU32,
+    pub(crate) run_queue_item: RunQueueItem,
+    pub(crate) executor: Cell<*const Executor>, // Valid if state != 0
+    pub(crate) poll_fn: UninitCell<unsafe fn(NonNull<TaskHeader>)>, // Valid if STATE_SPAWNED
+
+    #[cfg(feature = "time")]
+    pub(crate) expires_at: Cell<Instant>,
+    #[cfg(feature = "time")]
+    pub(crate) timer_queue_item: timer_queue::TimerQueueItem,
+}
+```
+Createing a new TaskHeader can be done using the `new` constructor function but
+note that this is only public in the crate so it cannot be called from code
+outside of the crate.
+```rust
+pub(crate) const fn new() -> Self {
+        Self {
+            state: AtomicU32::new(0),
+            run_queue_item: RunQueueItem::new(),
+            executor: Cell::new(ptr::null()),
+            poll_fn: UninitCell::uninit(),
+
+            #[cfg(feature = "time")]
+            expires_at: Cell::new(Instant::from_ticks(0)),
+            #[cfg(feature = "time")]
+            timer_queue_item: timer_queue::TimerQueueItem::new(),
+        }
+    }
+```
+RunQueueItem only has one member which is `next: Cell<*mut TaskHeader>` and
+note that this is part of the struct and not a pointer and upon creation it will
+be a Cell ptr::null_mut().
 
 
