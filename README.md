@@ -400,6 +400,34 @@ set substitute-path '/rustc/0d1754e8bf6942b4c1d24d7c923438782129ba5a' '/home/dan
 ```
 One thing to note is that we might have to update the hash after updating 
 Rust.
+```console
+$ rust-gdb out/atomics 
+Reading symbols from out/atomics...
+(gdb) br atomics.rs:4
+Breakpoint 1 at 0x8d47: file src/atomics.rs, line 4.
+(gdb) r
+Starting program: /home/danielbevenius/work/rust/learning-rust/out/atomics 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib64/libthread_db.so.1".
+
+Breakpoint 1, atomics::main () at src/atomics.rs:4
+4	    let a = AtomicIsize::new(0);
+Missing separate debuginfos, use: dnf debuginfo-install libgcc-11.2.1-9.fc35.x86_64
+(gdb) s
+core::sync::atomic::AtomicIsize::new (v=0) at /rustc/0d1754e8bf6942b4c1d24d7c923438782129ba5a/library/core/src/sync/atomic.rs:1401
+1401	            #[must_use]
+(gdb) list
+1396	            #[doc = concat!("let atomic_forty_two = ", stringify!($atomic_type), "::new(42);")]
+1397	            /// ```
+1398	            #[inline]
+1399	            #[$stable]
+1400	            #[$const_stable]
+1401	            #[must_use]
+1402	            pub const fn new(v: $int_type) -> Self {
+1403	                Self {v: UnsafeCell::new(v)}
+1404	            }
+1405	
+```
 
 ### Crate
 A crate is a binary or library.
@@ -568,8 +596,9 @@ let s1 = String::from("hello");
 let s2 = s1;
 ```
 So both s1 and s2 are stack allocated String objects that point to the same
-data. When this is done s1 will become null or something equivalent and no
+data. When this is done s1 will become "null" or something equivalent and no
 longer valid to be referenced leading to a compile time error.
+
 To create a copy you can use `clone`, but note that this will create a copy
 of the data on the heap and the two String instances will point to different
 places on the heap.
@@ -1390,11 +1419,37 @@ This is event looping that uses Mio.
 TODO:
 
 ### Pin
+Rust types fall into 2 different categories, types that can be moved around
+in memory like primitives (numbers, bools, etc, and all types made up on these
+primitive types). These are called Unpin types. Unpin is an autotrait which
+all types that are moveble get by default.
+
+Then there are also types that cannot be moved around in memory as this will
+cause them to misbehave. An example followes below were we have a struct which
+a field/member pointer that points to another field/member of a struct. These
+types are !Unpin (does not implement Unpin).
+
 ```rust
 pub struct Pin<P> {
     pointer: P,
 }
 ```
+```
+  +------------+     +---------+      +--------+
+  |Pin<Pointer>|---->| Pointer |----->| Data   |
+  +------------+     +---------+      +--------+
+```
+When I first saw this I thought that perhaps this indirection does something
+fancy like updating the pointer if moved but that does not seem to be the case.
+Pinning does nothing special with memory allocation like putting it into some
+"read only" memory or anything fancy. It only uses the type system to prevent
+certain operations on this value. But I think it does provide the ability to
+use swap, as that would only swap the Pin's pointer.
+
+Pin prevents the Pointer from being moved and this allows for using it in
+self-referencial structs.
+
+
 Notice that pointer is not pub but private so we can only access it by using
 methods that this type provides.
 
@@ -1440,17 +1495,61 @@ So this would produce something like the following in memory:
  0x7fffffffccf0     |0x00007fff00000008|
                     +------------------+
 ```
-Now what happens if we move our strut into another value?  
+Now what happens if we move our struct into another value?  
 Well, in theory the values would be copied to a new location on the stack. So
 the value in s.val would still be 8, and the value in s.ptr would still be the
-address to the old location on the stack. 
-I've not been able to create a reproducer of this but this migth be because
-it is not allowed.
+address to the old location on the stack.  There is an example of this in
+[Pin2.rs](./src/pin2.rs).
+```console
+$ make out/pin2
+rustc --edition 2021 -o out/pin2 -g src/pin2.rs
 
-Now Pin is only of interest where you have types that refer to data items with
-in them selves. If you don't have such a situation the type is Unpin. Unpin
+$ ./out/pin2
+t.a: 0x7ffc4a2e8c68 first
+t.b: 0x7ffc4a2e8c80 0x7ffc4a2e8c68 first
+
+t2.a: 0x7ffc4a2e8d78 second
+t2.b: 0x7ffc4a2e8d90 0x7ffc4a2e8d78 second
+
+Now swap t and t2)
+
+t.a: 0x7ffc4a2e8c68 second
+t.b: 0x7ffc4a2e8c80 0x7ffc4a2e8d78 first
+
+t2.a: 0x7ffc4a2e8d78 first
+t2.b: 0x7ffc4a2e8d90 0x7ffc4a2e8c68 second
+```
+So notice that this has just copies the bytes when swaping and we can see
+that the address of t.b stayed the same but the value was replaced with the
+value of t2.b:
+```console
+t.b: 0x7ffc4a2e8c80 0x7ffc4a2e8c68 first
+t.b: 0x7ffc4a2e8c80 0x7ffc4a2e8d78 first
+```
+And the same goes for t2:
+```console
+t2.b: 0x7ffc4a2e8d90 0x7ffc4a2e8d78 second
+t2.b: 0x7ffc4a2e8d90 0x7ffc4a2e8c68 second
+```
+
+Now Pin is only of interest where you have types that refer to data items within
+themselves. If you don't have such a situation the type is `Unpin`. `Unpin`
 is an auto trait, that is if the data types only contains members that are
-Unpin your data type will also be Unpin. 
+`Unpin` your data type will also be Unpin. 
+
+```rust
+#[stable(feature = "pin", since = "1.33.0")]
+#[lang = "pin"]
+#[fundamental]
+#[repr(transparent)]
+#[derive(Copy, Clone)]
+pub struct Pin<P> {
+    #[unstable(feature = "unsafe_pin_internals", issue = "none")]
+    #[doc(hidden)]
+    pub pointer: P,
+}
+```
+
 
 ### Trait
 Is like an Inteface which can be implemented by multiple types.
@@ -2645,6 +2744,8 @@ should be.
 
 
 ### Condvar
+This is a mechanism to be able to put a thread to sleep and also wake it up
+at some point.
 [condvar.rs](../src/condvar.rs) contains an example.
 
 ### Impl Trait
@@ -2674,3 +2775,68 @@ fn main() {
 This is only used for verifying language safety properties.
 
 
+### Trait Objects
+Is a pointer some value that implements a specified trait.
+These are implemented as 16 byte fat pointers, the first 8 bytes is a pointer
+to the data, and the second 8 bytes is a pointer to a vtable. 
+
+``` 
+    Data         Trait Object
+   +------+     +--------------+
+   |      |<----| ptr to data  |        vtable
+   +------+     |--------------|     +---------------+
+                | ptr to vtable|---->| ptr to drop   |
+                +--------------+     |---------------|
+                                     |    size       |
+                                     |---------------|
+                                     |    align      |
+                                     |---------------|
+                                     | ptr to func1  |
+                                     |---------------|
+                                     | ptr to func2  |
+                                     +---------------+
+```
+
+### extern crate
+```rust
+extern crate something;
+```
+This means that we want to link against this external library.
+In Rust 2018 this is no longer required and instead we can just write:
+```
+use something;
+```
+
+### Waker API
+Is a handle for waking up a task. This is intended for notifiying the Executor
+that it has stuff to do and that the executor should poll the task again.
+Waker has the following functions:
+* as_raw which gives a reference to the underlying RawWaker which a Waker wrapps.
+* from_raw create a new Waker from a RawWaker instance.
+* wake The actually wake up call which should wake up the task associated with
+this waker.
+* wake_by_ref same as wake but without consuming the Waker.
+* will_wake seems to be used to find out if two wakers would wake the same task.
+
+### Generators
+Futures in Rust are implemented in a simlar way that Generators are state
+machines.
+
+Notice the similarities between generators and async/await, they both generate
+statemachines:
+```rust
+    let mut generator = || {
+        println!("in generator, before yield");
+        yield 18;
+        println!("in generator, before return");
+        return "bajja"
+    };
+```
+```rust
+    let mut future = async {
+        println!("in future, before await");
+        some_future().await;
+        println!("in future, after await");
+        return "bajja"
+    };
+```
