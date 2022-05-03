@@ -1,6 +1,6 @@
 
 out/%: src/%.rs | out
-	rustc -o $@ -g $<
+	rustc --edition 2021 -o $@ -g $<
 
 out:
 	@mkdir out
