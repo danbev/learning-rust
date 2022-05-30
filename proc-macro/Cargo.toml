@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 
+proc-macro = true
+
 [workspace]
 
 [[bin]]
@@ -12,3 +14,5 @@ path = "main.rs"
 
 [dependencies]
 derive-macro = { path = "derive-macro" }
+attribute-macro = { path = "attribute-macro" }
+function-macro = { path = "function-macro" }

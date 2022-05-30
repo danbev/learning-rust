@@ -1,4 +1,6 @@
+#![allow(dead_code, unused_imports, unused_variables)]
 use derive_macro::Bajja;
+use function_macro::function_macro_declare;
 
 #[derive(Bajja)]
 struct MyStruct {
@@ -27,5 +29,6 @@ fn main() {
     MyTupleStruct::doit();
     MyEnum::doit();
     MyUnion::doit();
+    function_macro_declare!();
 }
 
