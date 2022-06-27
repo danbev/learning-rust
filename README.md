@@ -527,6 +527,9 @@ $ cargo install rustfilt
 $ readelf -s  target/debug/libsnippets.rlib | rustfilt
 ```
 
+### .d files
+These are makefile compatible depencency lists.
+
 ### use
 Is used to bring a module into scope so that we don't have to use the whole
 path for it (similar to `using` in C++ I guess):
@@ -1027,6 +1030,32 @@ This Ok(()) syntax might look a bit strange at first, but using () like this is
 the idiomatic way to indicate that we’re calling run for its side effects only;
 it doesn’t return a value we need.
 
+
+### Exception handling
+Happens in two stages, a search phase and a cleanup phase.
+
+Each module (as in an executable of a dynamic library and not a Rust module) has
+its own frame unwind info section (usually ".eh_frame")
+
+### eh_personality
+Exception Handling personality is a function that determines the how the
+exception is to be handled.
+
+
+```rust
+#[lang = "panic_info"]
+#[stable(feature = "panic_hooks", since = "1.10.0")]
+#[derive(Debug)]
+pub struct PanicInfo<'a> {
+    payload: &'a (dyn Any + Send),
+    message: Option<&'a fmt::Arguments<'a>>,
+    location: &'a Location<'a>,
+    can_unwind: bool,
+}
+```
+
+`__cxa_allocate_exception` takes a size_t and allocates enough memory to store
+the exception being throw.
 
 ### Closures
 
@@ -1822,8 +1851,22 @@ two arguments.
 
 
 ### Lifetimes
-These are annotations that start with `'` followed by a variable name.
-For example `'a` is spoken as 'tick a'. 
+Are actually named generic lifetime annotations and are declared in the same
+way as genericts using `'` followed by a variable name.
+For example `'a` is spoken as 'tick a':
+
+Lifetimes are all about references and nothing else. There are used at compile
+time by the borrowchecker and describe a relationship between references.
+
+Rules:
+* Each parameter that is a reference gets its own lifetime parameter
+
+* If there is exactly `one` input lifetime parameter then that lifetime is
+  assigned to all output lifetime parameters.
+
+* If there are multiple input lifetime parameters but one of them is $self or
+  &mut self then the lifetime self is assigned to all output lifetime parameters.
+
 
 ```console
 error[E0597]: `y` does not live long enough
@@ -2840,3 +2883,7 @@ statemachines:
         return "bajja"
     };
 ```
+
+### Doc-comments
+Doc-comments like `/// ...` and `!// ...` are syntax sugar for attributes. They
+desugar to `#[doc="..."]` and `#![doc="..."]`.
