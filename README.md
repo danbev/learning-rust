@@ -1906,6 +1906,34 @@ fn something<'a>(input: &'a i32) {
 When a function takes a single ref as an argument and returns a single ref then
 Rust assumes that those two refs have the same lifetime.
 
+When we have a struct that has a generic lifetime annotation, for example:
+```rust
+struct SomeStruct<'a, T> {
+    slice: &'a [T],
+}
+
+impl Iterator<'a, T> for SomeStruct<'a, T> {
+  ...
+}
+```
+Notice that we have to specify the lifetime annotation in the Iterator as well
+as for SomeStruct. This is because the above Iterator is generic. If it was not
+we could specify the implemention like this:
+```rust
+impl Iterator for SomeStruct<'static, i32> {
+  ...
+}
+```
+And that works because there is a generic lifetime annotation `'static` and
+there is a concrete type `i32`.
+
+### Borrowchecker
+* When passing a variable to another function one gives up ownership so the
+  receiving function now has ownership and the calling function can no longer
+  use the variable after that point.
+* When passing a reference you can pass as many immutable one as you like, or
+  one mutable borrow.
+
 ### Underscore
 This can be used when one needs to specify a type but can let Rust determine
 the template type, for example HashMap<_, _>. We might need to specify the type
@@ -1963,12 +1991,12 @@ fn main() { }
 ```
 Notice that the rust compiler includes the prelude.
 
-Show High-Level IR with types:
+Show High-Level IR (HIR) with types:
 ```console
 $ echo 'fn main(){}' | rustc +nightly --edition=2018 -Zunpretty=hir,typed just-main.rs 
 ```
 
-Show Mid-Level IR:
+Show Mid-Level IR (MIR):
 ```console
 $ echo 'fn main(){}' | rustc +nightly --edition=2018 -Zunpretty=hir,typed just-main.rs
 #[prelude_import]
@@ -1985,7 +2013,6 @@ Show LLVM IR:
 $ echo 'fn main(){}' | rustc +nightly --emit llvm-ir main/src/simple.rs
 ```
 This will generate a file named `basic.ll`.
-
 
 ### Control Flow Graphs (CFG)
 Is structured as a set of basic blocks (bb) which are connected by edges. A BB
