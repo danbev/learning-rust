@@ -2915,3 +2915,20 @@ statemachines:
 ### Doc-comments
 Doc-comments like `/// ...` and `!// ...` are syntax sugar for attributes. They
 desugar to `#[doc="..."]` and `#![doc="..."]`.
+
+### rvalue static promotion
+This following code is valid and compiles ([immutables.rs](src/immutables.rs):
+```rust
+    let nr = &mut 17;
+    *nr += 1;
+    println!("nr: {}", nr);
+```
+The surprising thing to me was that we can declare a reference to a literal. My
+initial though was that this would not compile as the literal would be hard
+coded into the code (think argument to an assembly instruction. But in Rust case
+ what Rust will create a temporary area of memory containing the value. This is
+called 'rvalue static promotion`.
+
+```console
+$ rustc +nightly -Zunpretty=mir src/immutables.rs
+```
