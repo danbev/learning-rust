@@ -632,7 +632,7 @@ stack`stack::main::h338f866a487ef61e:
     0x55555555b694 <+36>: ret
 ```
 So we can first see that we are making room on the stack for 24 bytes (0x18),
-the loading the contenst or rip+0x2b985 into $rax and then storing that onto
+then loading the contents of rip+0x2b985 into $rax and then storing that onto
 the stack
 
 ```console
@@ -673,6 +673,8 @@ knows that is should call this implementation.
 This is called a language item.
 
 ### lang_items
+Are a way for the stdlib and libcore to define types, traits, functions, and
+other items
 
 rustc_hir/src/lang_items.rs:
 ```rust
@@ -1867,6 +1869,8 @@ Rules:
 * If there are multiple input lifetime parameters but one of them is $self or
   &mut self then the lifetime self is assigned to all output lifetime parameters.
 
+If any of these rules are "broken" the compile needs help from the programmer
+to explicitly specify the generic lifetime annotations.
 
 ```console
 error[E0597]: `y` does not live long enough
