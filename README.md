@@ -1998,16 +1998,82 @@ bb0:  { // basic block 0
 }
 ```
 
-Local variables are specified using a `_` prefix followed by a number, like
-`_1`, and the local `_0` is reserved for storing the return value. 
 
 ### Middle Intermedieate Representation (MIR)
 This representation is generated from the HIR and will be transformed into
 LLVM-IR. It was described in a presentation as "Rust's simple core" and has
 explicit types, explicit panics, not loops. It's a control flow graph.
 
+Local variables are specified using a `_` prefix followed by a number:
+```
+let mut _1: i32;
+```
+The local `_0` is reserved for storing the return value:
+```
+let mut _0: ();
+```
+Notice that the type is the unit type.
 
-bb = basic block
+I variable can har fields which is denoted as `_1.f` where for example:
+```
+let mut _1: (i32, bool);
+```
+Notice here that the type is a tuple, and `_1.0` is the i32 value, and `_1.1` is
+the bool value.
+
+`StorageLive(var)` denotes that storage is to be allocated for _1 on the stack.
+`StorageDead(var)` denotes deallocating from the stack.
+
+Lets take a very simple example ([mir.rs](src/mir.rs):
+```rust
+$ rustc +nightly -Zunpretty=mir src/mir.rs 
+fn main() -> () {
+    let mut _0: ();                      // return place in scope 0 at src/mir.rs:1:11: 1:11
+    let mut _1: i32;                     // in scope 0 at src/mir.rs:2:9: 2:15
+    scope 1 {
+        debug _x => _1;                  // in scope 1 at src/mir.rs:2:9: 2:15
+    }
+
+    bb0: {
+        _1 = const 16_i32;               // scope 0 at src/mir.rs:2:18: 2:20
+        _1 = const 18_i32;               // scope 1 at src/mir.rs:3:5: 3:16
+        return;                          // scope 0 at src/mir.rs:4:2: 4:2
+    }
+}
+```
+Here we can see that `_0` is a variable that will be used as the return value
+of the main function, notice that the main function in MIR actually returns
+`()`.
+After that we have `_1` which is the `_x` variable in the source
+[mir.rs](src/mir.rs).
+We only have one scope in our main function, and the `debug` keyword is to
+associate our variable name which with variable "index" in MIR.
+Following that we have the first and only basic block, `bb0`. Now, when we use
+rustc above the default value for
+[opt-level](https://doc.rust-lang.org/rustc/codegen-options/index.html#opt-level)
+(optimization level) is 0.
+
+The optimization levels can be set using the `-C` which stands for `Codegen`
+flag to rustc. We can turn on all optimizations using opt-level 3:
+```console
+$ rustc +nightly -Zunpretty=mir -C opt-level=3 src/mir.rs 
+// WARNING: This output format is intended for human consumers only
+// and is subject to change without notice. Knock yourself out.
+fn main() -> () {
+    let mut _0: ();                      // return place in scope 0 at src/mir.rs:1:11: 1:11
+    let mut _1: i32;                     // in scope 0 at src/mir.rs:2:9: 2:15
+    scope 1 {
+        debug _x => _1;                  // in scope 1 at src/mir.rs:2:9: 2:15
+    }
+
+    bb0: {
+        StorageLive(_1);                 // scope 0 at src/mir.rs:2:9: 2:15
+        StorageDead(_1);                 // scope 0 at src/mir.rs:4:1: 4:2
+        return;                          // scope 0 at src/mir.rs:4:2: 4:2
+    }
+}
+```
+
 
 
 ### rustc with heredoc
