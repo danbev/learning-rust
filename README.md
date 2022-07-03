@@ -1982,6 +1982,34 @@ $ echo 'fn main(){}' | rustc +nightly --emit llvm-ir main/src/simple.rs
 ```
 This will generate a file named `basic.ll`.
 
+
+### Control Flow Graphs (CFG)
+Is structured as a set of basic blocks (bb) which are connected by edges. A BB
+consists of a set of statements and when you branch to a BB you start executing
+the statement in order one after the other. At the end of the block there can
+be a branch to another block which is called a terminator.
+
+```rust
+bb0:  { // basic block 0
+  statement0;
+  statement1;
+  ...
+  terminator;
+}
+```
+
+Local variables are specified using a `_` prefix followed by a number, like
+`_1`, and the local `_0` is reserved for storing the return value. 
+
+### Middle Intermedieate Representation (MIR)
+This representation is generated from the HIR and will be transformed into
+LLVM-IR. It was described in a presentation as "Rust's simple core" and has
+explicit types, explicit panics, not loops. It's a control flow graph.
+
+
+bb = basic block
+
+
 ### rustc with heredoc
 This is useful when you don't need to save the source in a file:
 ```console
