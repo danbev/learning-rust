@@ -2104,7 +2104,10 @@ fn main() -> () {
     }
 }
 ```
+In this case since we don't actually use the variable it has been optimized out.
 
+One thing to keep in mind when looking at MIR is that this is intended to be
+used for optimizations, and will then be lowered into llvm-ir.
 
 
 ### rustc with heredoc
