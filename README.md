@@ -2088,8 +2088,6 @@ The optimization levels can be set using the `-C` which stands for `Codegen`
 flag to rustc. We can turn on all optimizations using opt-level 3:
 ```console
 $ rustc +nightly -Zunpretty=mir -C opt-level=3 src/mir.rs 
-// WARNING: This output format is intended for human consumers only
-// and is subject to change without notice. Knock yourself out.
 fn main() -> () {
     let mut _0: ();                      // return place in scope 0 at src/mir.rs:1:11: 1:11
     let mut _1: i32;                     // in scope 0 at src/mir.rs:2:9: 2:15
@@ -2701,6 +2699,9 @@ These are called zero sized types (ZST)s.
 
 ### Unit type
 `()` is an empty tuple of zero size.
+
+The semicolon `;` can be used to discard the result of an expression at the end
+of a block, making the expression (and thus  the block) evaluate to `().
 
 
 ### rustc_driver
