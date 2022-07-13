@@ -2,9 +2,68 @@
 The sole purpose of this project is to learn the [Rust](http://www.rust-lang.org/) programming language.
 
 ### Contents
+1. [Debugging](#debugging)
 1. [Startup](#startup)
 1. [Embedded Rust](./notes/embedded-rust.md)
 1. [Pinning](#pin)
+
+### Debugging
+Debug symbols are enabled by default when using cargo build or cargo run
+without the `--release` flag.
+
+We can use `rust-gdb` or `rust-lldb`
+
+To debug Rust language source code You want to have the rust sources installed:
+```console
+$ rustup component add rust-src
+```
+
+In gdb you might not be able to step into Rust std sources and see an message/
+path like this:
+```console
+alloc::alloc::exchange_malloc (size=4, align=1) at /rustc/0d1754e8bf6942b4c1d24d7c923438782129ba5a/library/alloc/src/alloc.rs:317
+```
+This can be worked around by adding the following to a `.gdbinit`:
+```console
+set substitute-path '/rustc/0d1754e8bf6942b4c1d24d7c923438782129ba5a' '/home/danielbevenius/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust
+```
+One thing to note is that we might have to update the hash after updating Rust.
+
+rust-lldb example:
+```console
+$ rust-lldb -- ./target/debug/main
+(lldb) br s -f main.rs -l 47
+(lldb) r
+```
+
+rust-gdb example:
+```console
+$ rust-gdb out/atomics
+Reading symbols from out/atomics...
+(gdb) br atomics.rs:4
+Breakpoint 1 at 0x8d47: file src/atomics.rs, line 4.
+(gdb) r
+Starting program: /home/danielbevenius/work/rust/learning-rust/out/atomics
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib64/libthread_db.so.1".
+
+Breakpoint 1, atomics::main () at src/atomics.rs:4
+4	    let a = AtomicIsize::new(0);
+Missing separate debuginfos, use: dnf debuginfo-install libgcc-11.2.1-9.fc35.x86_64
+(gdb) s
+core::sync::atomic::AtomicIsize::new (v=0) at /rustc/0d1754e8bf6942b4c1d24d7c923438782129ba5a/library/core/src/sync/atomic.rs:1401
+1401	            #[must_use]
+(gdb) list
+1396	            #[doc = concat!("let atomic_forty_two = ", stringify!($atomic_type), "::new(42);")]
+1397	            /// ```
+1398	            #[inline]
+1399	            #[$stable]
+1400	            #[$const_stable]
+1401	            #[must_use]
+1402	            pub const fn new(v: $int_type) -> Self {
+1403	                Self {v: UnsafeCell::new(v)}
+1404	            }
+```
 
 ### Startup
 [main.rs](./startup/src/main.rs) is used in this section to walkthrough the
@@ -28,7 +87,7 @@ $ objdump -Cwd ./target/debug/startup | grep 0000000000007540
 
 So lets set a break point on that `_start`:
 ```console
-$ rust-lldb --  ./target/debug/startup
+$ rust-lldb -- ./target/debug/startup
 (lldb) br s -n _start
 Breakpoint 1: where = startup`_start, address = 0x0000000000007540
 (lldb) r
@@ -85,8 +144,8 @@ error: Could not find function bounds for address 0xe5894855fa1e0ff3
 Perhaps this is not used or I'm not understanding how it should be used. The
 docs above refer to libraries that have been loaded before this code runs.
 
-This is rest of the assembly code is setting up argument, 7 of them. 6 are
-passed in registers and one on the stack for the  `__libc_start_main` function:
+The rest of the assembly code is setting up argument, 7 of them. 6 are passed in
+registers and one on the stack for the  `__libc_start_main` function:
 ```c
 int __libc_start_main(int *(main) (int, char * *, char * *),   // rdi
                       int argc,                                // rsi
@@ -375,59 +434,6 @@ $ rustc snippets/src/readline.rs
 $ ./readline
 ```
 
-### Debugging
-Debug symbols are enabled by default when using cargo build or cargo run 
-without the `--release` flag.
-```console
-$ lldb -- ./target/debug/main
-(lldb) br s -f main.rs -l 47
-(lldb) r
-```
-
-You want to have the rust sources installed:
-```console
-$ rustup component add rust-src
-```
-
-In gdb you might not be able to step into Rust std sources and see an message/
-path like this: 
-```console
-alloc::alloc::exchange_malloc (size=4, align=1) at /rustc/0d1754e8bf6942b4c1d24d7c923438782129ba5a/library/alloc/src/alloc.rs:317
-```
-This can be worked around by adding the following to a `.gdbinit`:
-```console
-set substitute-path '/rustc/0d1754e8bf6942b4c1d24d7c923438782129ba5a' '/home/danielbevenius/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust
-```
-One thing to note is that we might have to update the hash after updating 
-Rust.
-```console
-$ rust-gdb out/atomics 
-Reading symbols from out/atomics...
-(gdb) br atomics.rs:4
-Breakpoint 1 at 0x8d47: file src/atomics.rs, line 4.
-(gdb) r
-Starting program: /home/danielbevenius/work/rust/learning-rust/out/atomics 
-[Thread debugging using libthread_db enabled]
-Using host libthread_db library "/usr/lib64/libthread_db.so.1".
-
-Breakpoint 1, atomics::main () at src/atomics.rs:4
-4	    let a = AtomicIsize::new(0);
-Missing separate debuginfos, use: dnf debuginfo-install libgcc-11.2.1-9.fc35.x86_64
-(gdb) s
-core::sync::atomic::AtomicIsize::new (v=0) at /rustc/0d1754e8bf6942b4c1d24d7c923438782129ba5a/library/core/src/sync/atomic.rs:1401
-1401	            #[must_use]
-(gdb) list
-1396	            #[doc = concat!("let atomic_forty_two = ", stringify!($atomic_type), "::new(42);")]
-1397	            /// ```
-1398	            #[inline]
-1399	            #[$stable]
-1400	            #[$const_stable]
-1401	            #[must_use]
-1402	            pub const fn new(v: $int_type) -> Self {
-1403	                Self {v: UnsafeCell::new(v)}
-1404	            }
-1405	
-```
 
 ### Crate
 A crate is a binary or library.
