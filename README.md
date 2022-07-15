@@ -183,7 +183,12 @@ runtime library. If we inspect the generated llvm intermediate representation
 `main` is named just_main::main. 
 ```console
 $ rustc --emit=llvm-ir just-main.rs
-
+```
+And we can filter/demangle symbol names using rustfilt:
+```
+$ cat just-main.ll | rustfilt --input - --output just-main-filtered.ll
+```
+```
 ; Function Attrs: nonlazybind                                                   
 define i32 @main(i32 %0, i8** %1) unnamed_addr #6 {                             
 top:                                                                            
@@ -278,6 +283,79 @@ fn lang_start_internal(
     ret_code                                                                    
 }                                              
 ```
+This is using `catch_undwind` and there is a standalone example
+[unwind.rs](./src/unwind.rs) which might be helpful to take a look at and run to
+better understand what is happening here. Taking this apart a little so it is a
+little easier to understand we are passing a closure to the first call to
+panic::catch_unwind, and this closure will call
+panic::catch_unwind(sys_common::rt::init(argc, argv) when it is called.
+
+catch_unwind will call the closure passed in and return Ok with the result of
+the closure if there is no panic from that call. If there is a panic then
+`catch_unwind` will return Err(cause).
+
+`catch_unwind` can be found in `library/std/src/panic.rs`:
+```rust
+#[stable(feature = "catch_unwind", since = "1.9.0")]                            
+pub fn catch_unwind<F: FnOnce() -> R + UnwindSafe, R>(f: F) -> Result<R> {      
+    unsafe { panicking::r#try(f) }                                              
+}
+```
+`panicking::r#try` can be found in `library/std/src/panicing.rs`. This name
+looked odd to me and I've not come across it before but it is simply to allow
+Rust to have the name of this function be `try`, the `r` stands for raw and I
+think `try` is a reserved keyword in Rust. I've added an example of this
+in [unwind.rs](./src/unwind.rs).
+```rust
+/// Invoke a closure, capturing the cause of an unwinding panic if one occurs.
+pub unsafe fn r#try<R, F: FnOnce() -> R>(f: F) -> Result<R, Box<dyn Any + Send>> {
+    ...
+
+    unsafe {
+        return if intrinsics::r#try(do_call::<F, R>, data_ptr, do_catch::<F, R>) == 0 {
+            Ok(ManuallyDrop::into_inner(data.r))
+        } else {
+            Err(ManuallyDrop::into_inner(data.p))
+        };
+    }
+
+    #[inline]                                                                   
+    fn do_call<F: FnOnce() -> R, R>(data: *mut u8) {
+        unsafe {
+            let data = data as *mut Data<F, R>;
+            let data = &mut (*data);
+            let f = ManuallyDrop::take(&mut data.f);
+            data.r = ManuallyDrop::new(f());
+        }
+    }
+
+    fn do_catch<F: FnOnce() -> R, R>(data: *mut u8, payload: *mut u8) {         
+        unsafe {
+            let data = data as *mut Data<F, R>;
+            let data = &mut (*data);
+            let obj = cleanup(payload);
+            data.p = ManuallyDrop::new(obj);
+        }
+    }
+}
+```
+`intrinsics::try` can be found in `library/core/src/intrinsics.rs`:
+```rust
+    /// Rust's "try catch" construct which invokes the function pointer `try_fn`
+    /// with the data pointer `data`.
+    ///                                                                             
+    /// The third argument is a function called if a panic occurs. This function
+    /// takes the data pointer and a pointer to the target-specific exception
+    /// object that was caught. For more information see the compiler's
+    /// source as well as std's catch implementation.
+    pub fn r#try(try_fn: fn(*mut u8), data: *mut u8, catch_fn: fn(*mut u8, *mut u8)) -> i32;
+```
+So the `try_fn` will be the `do_call` function, and `catch_fn` will be the
+`do_catch` function. Now, this is the declaration of the function, but as it
+is an intrinsic function it will be implemented by the compiler for the target
+architecture.
+
+
 Note that first sys_common::rt::init(argc, argv) is called which can be found in
 library/std/src/sys_common/rt.rs:
 ```rust
@@ -3038,4 +3116,132 @@ called 'rvalue static promotion`.
 
 ```console
 $ rustc +nightly -Zunpretty=mir src/immutables.rs
+```
+
+### core::panic!
+In library/core/src/macros.rs we have:
+```rust
+#[rustc_builtin_macro(core_panic)]
+#[allow_internal_unstable(edition_panic)]
+#[stable(feature = "core", since = "1.6.0")]
+#[rustc_diagnostic_item = "core_panic_macro"]
+macro_rules! panic {
+    // Expands to either `$crate::panic::panic_2015` or `$crate::panic::panic_2021`
+    // depending on the edition of the caller.
+    ($($arg:tt)*) => {
+        /* compiler built-in */
+    };
+}
+```
+Notice the use of `rustc_builtin_macro(core_panic)]` which can be found in
+compiler/rustc_builtin_macros/src/lib.rs. Builtin macros inject code into the
+crate before it is lowered into HIR. So this would be done during the
+compilation. 
+```rust
+pub fn register_builtin_macros(resolver: &mut dyn ResolverExpand) {
+...
+   // Notice that register is a closure
+   let mut register = |name, kind| resolver.register_builtin_macro(name, kind);
+   macro register_bang($($name:ident: $f:expr,)*) {
+        $(register(sym::$name, SyntaxExtensionKind::LegacyBang(Box::new($f as MacroExpanderFn)));)*
+   }
+
+   register_bang! {
+      ...
+      core_panic: edition_panic::expand_panic,
+      std_panic:  edition_panic::expand_panic,
+   }
+}
+```
+So if we expand one of those macro calls we should get something like:
+```
+use rustc_span::symbol::sym;
+
+  resolver.register_builtin_macro(
+    sym::core_panic,
+    SyntaxExtensionKind::LegacyBang(Box::new(edition_panic::expand_panic as MacroExpanderFn)));
+```
+compiler/rustc_span/src/symbol.rs has the following macro:
+```rust
+Symbols {
+  ...
+  core_panic,
+  ...
+  panic_2015,
+  panic_2021,
+  ...
+  std_panic,
+  ...
+}
+```
+In `compiler/rustc_builtin_macros/src/edition_panic.rs` we find:
+```rust
+pub fn expand_panic<'cx>(                                                       
+    cx: &'cx mut ExtCtxt<'_>,                                                   
+    sp: Span,                                                                   
+    tts: TokenStream,                                                           
+) -> Box<dyn MacResult + 'cx> {                                                 
+    let mac = if use_panic_2021(sp) { sym::panic_2021 } else { sym::panic_2015 };
+    expand(mac, cx, sp, tts)                                                    
+}
+```
+So this will set `mac` (Symbol) to sym::panic_2021 or sym::panic_2015 which is
+then passed to expand.
+In library/core/src/panic.rs we have:
+```rust
+pub macro panic_2021 {                                                             
+    () => (
+        $crate::panicking::panic("explicit panic")
+    ),
+    // Special-case the single-argument case for const_panic.
+    ("{}", $arg:expr $(,)?) => (
+        $crate::panicking::panic_display(&$arg)
+    ),
+    ($($t:tt)+) => (
+        $crate::panicking::panic_fmt($crate::const_format_args!($($t)+))
+    ),
+}
+```
+
+### std::panic!
+Is much like `core::panic!` but can be found in libary/std/src/macros.rs.
+
+### abort vs unwind
+```console
+$ rustc -C panic=abort -o abort - <<HERE
+> fn main() {
+> panic!("oh no");
+> }
+> HERE
+$ ./abort 
+thread 'main' panicked at 'oh no', <anon>:2:1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+Aborted (core dumped)
+```
+
+```console
+$ rustc -C panic=unwind -o abort - <<HERE
+fn main() {
+panic!("oh no");
+}
+HERE
+$ ./abort 
+thread 'main' panicked at 'oh no', <anon>:2:1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+
+### rustc as lib
+To use rustc as a library we need to add `rustc-dev` as a component:
+```console
+$ rustup component add rustc-dev llvm-tools-preview
+```
+
+### sty.rs
+Can be found in compiler/rustc_type_ir/src/sty.rs.
+
+### link rustc build
+```console
+$ rustup toolchain link dev ~/work/rust/rust/build/x86_64-unknown-linux-gnu/stage0
+$ rustc +dev --version
+rustc 1.63.0-beta.2 (6c1f14289 2022-06-28)
 ```
