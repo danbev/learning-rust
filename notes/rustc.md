@@ -31,9 +31,9 @@ Some of this walk through might seem like it going through unnecessary details
 but this is intentional as I'm fairly new to Rust and I believe that there are
 design patterns etc that I can pick up from going through the code base.
 
-The entry point to rustc is in main.rs there are some step related to `jemalloc`
-and the setup of signal handlers, after which `rustc_driver::main()` is called
-which is path dependency of the rustc crate:
+The entry point to rustc is in compiler/rustc/src/main.rs there are some step
+related to `jemalloc` and the setup of signal handlers, after which
+ `rustc_driver::main()` is called which is path dependency of the rustc crate:
 ```toml
 [dependencies]                                                                  
 rustc_driver = { path = "../rustc_driver" }
@@ -45,6 +45,17 @@ fn main() {
      rustc_driver::set_sigpipe_handler();                                        
      rustc_driver::main() 
 }
+```
+
+Lets start a debug session using an empty main function and a locally built
+rustc compiler with `debug = true` set in config.toml and then rebuild the
+compiler:
+```console
+$ ./x.py build library
+```
+After that we can start a debugging session using:
+```rust
+$ rust-gdb --args ./build/x86_64-unknown-linux-gnu/stage0/bin/rustc main.rs
 ```
 
 `rustc_driver` can be found in `compiler/rustc_driver/src/lib.rs`
@@ -127,7 +138,30 @@ After this we have the following:
         RunCompiler::new(&args, &mut callbacks).run()
     });
 ```
-The callbacks 
+`catch_with_exit_code` looks like this:
+```rust
+pub fn catch_with_exit_code(f: impl FnOnce() -> interface::Result<()>) -> i32 {
+    let result = catch_fatal_errors(f).and_then(|result| result);
+    match result {
+        Ok(()) => EXIT_SUCCESS,
+        Err(_) => EXIT_FAILURE,
+    }
+}
+````
+An if we look at `catch_fatal_errors`:
+```rust
+pub fn catch_fatal_errors<F: FnOnce() -> R, R>(f: F) -> Result<R, ErrorGuaranteed> {
+    catch_unwind(panic::AssertUnwindSafe(f)).map_err(|value| {
+        if value.is::<rustc_errors::FatalErrorMarker>() {
+            ErrorGuaranteed::unchecked_claim_error_was_emitted()
+        } else {
+            panic::resume_unwind(value);
+        }
+    })
+}
+```
+
+RunCompiler::run:
 ```rust
     pub fn run(self) -> interface::Result<()> {
         run_compiler(
