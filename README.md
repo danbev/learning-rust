@@ -3245,3 +3245,8 @@ $ rustup toolchain link dev ~/work/rust/rust/build/x86_64-unknown-linux-gnu/stag
 $ rustc +dev --version
 rustc 1.63.0-beta.2 (6c1f14289 2022-06-28)
 ```
+
+### lint listing
+```console
+$ rustc -W help
+```
