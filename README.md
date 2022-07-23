@@ -2958,7 +2958,7 @@ Dependencies can enable features using the `features` key:
 something = {version = "0.1.0", optional = true, features = ["f1", "f2"]}
 ```
 And we can disable the default features using `default-features = false`.
-Dependency features can also be enabled in the features table instread of within
+Dependency features can also be enabled in the features table instead of within
 the dependency declaration using the following syntax:
 ```rust
 [dependencies]
