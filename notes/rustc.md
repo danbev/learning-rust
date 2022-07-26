@@ -233,4 +233,145 @@ fn run_compiler(
     let args = args::arg_expand_all(at_args);
     let Some(matches) = handle_options(&args) else { return Ok(()) };
 ```
+handle_options will handle any options like `--explain`, `help`, `C` (CodeGen
+flags), `version`. If one of those options were specified then `handle_options`
+will print the help/usage and return None which is handled by the above else
+clause to return an empty Result.
+Next session options are built which are the command line options like
+`--crate-name`, `-L`, `--print` etc. All these are parsed and then an Options
+is crated using the parsed fields.
+Next, we have:
+```rust
+    let sopts = config::build_session_options(&matches);
+```
+This will parse other options like `L`, `sysroot`, `target`, `crate-name`,
+`test`, `print`, etc.  The values of these will be collected and returned in
+an `Options`.
+Next, there will be a check for the `--explain` option and if there was such an
+option it will be handled and then the function will return Ok(()).
+Next, an `interface::Config` will be created which will be passed to:
+```rust
+interface::run_compiler(config, |compiler| {
+        let sess = compiler.session();
+        ...
+}
+```
+`compiler/rustc_interface/src/interface.rs` we have:
+```rust
+pub fn run_compiler<R: Send>(config: Config, f: impl FnOnce(&Compiler) -> R + Send) -> R {
+    tracing::trace!("run_compiler");
+    util::run_in_thread_pool_with_globals(
+        config.opts.edition,
+        config.opts.unstable_opts.threads,
+        || create_compiler_and_run(config, f),
+    )
+}
+```
+So, `util::run_in_thread_pool_with_globals` can be found in
+compiler/rustc_interface/src/util.rs and will setup/configure the threading
+properties like stack size. It will then call:
+```rust
+    let main_handler = move || rustc_span::create_session_globals_then(edition, f);
+```
+`create_session_globals_then` can be found in compiler_rustc_span/src/lib.rs:
+```rust
+#[inline]
+pub fn create_session_globals_then<R>(edition: Edition, f: impl FnOnce() -> R) -> R {
+    let session_globals = SessionGlobals::new(edition);
+    SESSION_GLOBALS.set(&session_globals, f)
+}
+```
+Lets take a closer look at `SessionGlobals`:
+```rust
+// Per-session global variables: this struct is stored in thread-local storage
+// in such a way that it is accessible without any kind of handle to all
+// threads within the compilation session, but is not accessible outside the
+// session.
+pub struct SessionGlobals {
+    symbol_interner: symbol::Interner,
+    span_interner: Lock<span_encoding::SpanInterner>,
+    hygiene_data: Lock<hygiene::HygieneData>,
+    source_map: Lock<Option<Lrc<SourceMap>>>,
+}
+
+scoped_tls::scoped_thread_local!(static SESSION_GLOBALS: SessionGlobals);
+```
+We can inspect this
+```console
+(gdb) whatis rustc_span::SESSION_GLOBALS
+type = scoped_tls::ScopedKey<rustc_span::SessionGlobals>
+(gdb) info variables SESSION_GLOBALS
+All variables matching regular expression "SESSION_GLOBALS":
+Non-debugging symbols:
+0x00007fffee71c328  rustc_span::SESSION_GLOBALS::FOO::__getit::__KEY
+0x00007ffff7f0f750  rustc_span::SESSION_GLOBALS
+```
+Next the function that will be called is `create_compiler_and_run(config, f)`,
+```rust
+pub fn run_compiler<R: Send>(config: Config, f: impl FnOnce(&Compiler) -> R + Send) -> R {
+    util::run_in_thread_pool_with_globals(
+        config.opts.edition,
+        config.opts.unstable_opts.threads,
+        || create_compiler_and_run(config, f),
+    )
+```
+
+```rust
+pub fn create_compiler_and_run<R>(config: Config, f: impl FnOnce(&Compiler) -> R) -> R {
+    crate::callbacks::setup_callbacks();
+
+    let registry = &config.registry;
+    let (mut sess, codegen_backend) = util::create_session(
+        config.opts,
+        config.crate_cfg,
+        config.crate_check_cfg,
+        config.diagnostic_output,
+        config.file_loader,
+        config.input_path.clone(),
+        config.lint_caps,
+        config.make_codegen_backend,
+        registry.clone(),
+    );
+```
+`util::create_session` will create a `Session` which will be bound to the
+`sess` variable.
+```rust
+    if let Some(parse_sess_created) = config.parse_sess_created {
+        parse_sess_created(
+            &mut Lrc::get_mut(&mut sess)
+                .expect("create_session() should never share the returned session")
+                .parse_sess,
+        );
+    }
+```
+If we look at `parse_sess_create` this is a declared as a callback in the struct
+Config:
+```rust
+pub struct Config {
+  ...
+  /// This is a callback from the driver that is called when [`ParseSess`] is created.
+  pub parse_sess_created: Option<Box<dyn FnOnce(&mut ParseSess) + Send>>,
+  ...
+}
+```
+So if `parse_sess_created` is not None it will be bound to `parse_sess_created`
+in the `if let` expression. "if let destructures config.parse_sess_created into
+Some(parse_sess_created) then evaluate the block" which is simliar to writing:
+```rust
+    match config.parse_sess_created {
+        Some(parse_sess_created) => {
+            parse_sess_created(
+	        &mut Lrc::get_mut(&mut sess).expect("create_session() should never share the returned session").parse_sess,
+            )
+        },
+        None => {
+        }
+    }
+```
+Arc::get_mut returns a mutable reference if there are now other Arc or Weak
+pointers to the same location. `compiler/rustc_session/src/session.rs` `Session`
+has the member named `parse_sess` which is then passed to the callback as the
+sole argument. So the `expect` above is refering to util::create_session() if
+I'm understanding this correctly. I was a little confused when I first read this
+code which `create_session()` it was referring to.
 
