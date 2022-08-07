@@ -31,8 +31,8 @@ Some of this walk through might seem like it going through unnecessary details
 but this is intentional as I'm fairly new to Rust and I believe that there are
 design patterns etc that I can pick up from going through the code base.
 
-The entry point to rustc is in compiler/rustc/src/main.rs there are some step
-related to `jemalloc` and the setup of signal handlers, after which
+The entry point to rustc is in `compiler/rustc/src/main.rs` there are some step
+related to `jemalloc` and the setup of signal handlers first, after which
  `rustc_driver::main()` is called which is path dependency of the rustc crate:
 ```toml
 [dependencies]                                                                  
@@ -48,7 +48,7 @@ fn main() {
 ```
 
 Lets start a debug session using an empty main function and a locally built
-rustc compiler with `debug = true` set in config.toml and then rebuild the
+`rustc` compiler with `debug = true` set in config.toml and then rebuild the
 compiler:
 ```console
 debug = true
@@ -62,7 +62,7 @@ $ ./x.py build library
 ```
 After that we can start a debugging session using:
 ```rust
-$ rust-gdb --args ./build/x86_64-unknown-linux-gnu/stage0/bin/rustc main.rs
+$ rust-gdb --args ./build/x86_64-unknown-linux-gnu/stage1/bin/rustc main.rs
 Reading symbols from ./build/x86_64-unknown-linux-gnu/stage1/bin/rustc...
 (gdb) br rustc_main::main 
 Breakpoint 1 at 0x1131: file compiler/rustc/src/main.rs, line 61.
