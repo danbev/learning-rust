@@ -40,6 +40,12 @@ fn process_long<T: Doit>(d: &T) {
 }
 
 #[allow(dead_code)]
+fn process_long_where<T>(d: &T) 
+    where T: Doit {
+    d.process();
+}
+
+#[allow(dead_code)]
 fn process_short(d: &impl Doit) {
     d.process();
 }
