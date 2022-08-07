@@ -25,4 +25,21 @@ fn main() {
     let twice = &Twice{};
     call_process(once);
     call_process(twice);
+
+    let one = Once{};
+    let to: &dyn Doit = &one;
+    to.process();
+    Doit::process(to);
+}
+
+// The following two functions are equivalent. One might prefer the generic
+// version (the first one) if the function uses T in multiple parameters.
+#[allow(dead_code)]
+fn process_long<T: Doit>(d: &T) {
+    d.process();
+}
+
+#[allow(dead_code)]
+fn process_short(d: &impl Doit) {
+    d.process();
 }
