@@ -29,7 +29,3 @@ path = "src/no_macros.rs"
 [patch.crates-io]
 embassy-executor = { git = "https://github.com/embassy-rs/embassy", branch = "master" }
 embassy-time = { git = "https://github.com/embassy-rs/embassy", branch = "master" }
-
-#embassy-executor = { git = "https://github.com/embassy-rs/embassy", rev = "cb9f0ef5b800ce4a22cde1805e0eb88425f1e07b" }
-#embassy-time = { git = "https://github.com/embassy-rs/embassy", rev = "cb9f0ef5b800ce4a22cde1805e0eb88425f1e07b" }
-
