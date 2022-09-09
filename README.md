@@ -920,6 +920,11 @@ Global::allocate is a method which takes a Layout. A Layout contains the
 requested size and alignement that the program is asking to allocator to find
 and allow for it to use.
 
+### repr(transparent)
+[Documentation](https://doc.rust-lang.org/1.26.2/unstable-book/language-features/repr-transparent.html)
+This is for telling the compiler that a type is only for type safety on the Rust
+side.
+
 
 ### Cell
 Allows for shared mutable containers in Rust. So normally you can only have a
