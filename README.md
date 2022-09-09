@@ -920,13 +920,13 @@ Global::allocate is a method which takes a Layout. A Layout contains the
 requested size and alignement that the program is asking to allocator to find
 and allow for it to use.
 
-### UnsafeCell
-TODO:
 
 ### Cell
 Allows for shared mutable containers in Rust. So normally you can only have a
 single mutable reference but this allows multiple mutable pointers to the same
-data.
+data. This can be done because a reference is never returned by any of the
+methods in Cell.
+
 Cell is generic so it expects a type to be specified when creating an instance
 of it.
 ```rust
@@ -937,12 +937,12 @@ But the type can also be inferred:
   let something = Something{id: 1, age: Cell::new(45)};
 ```
 
-Cell::set can be used to set the value in the Cell.
-Cell::get will return a copy of the contained value.
+`Cell::set` can be used to set the value in the Cell.
+`Cell::get` will return a copy of the contained value.
 
 There is no way to get a pointer to the value inside the cell, all function
-that manipulate the contained value done by the Cell. This means that there is
-never any other pointers to the Call value which allows it to be mutated.
+that manipulate the contained value done by the Cell. This means that there are
+never any other pointers to the Cell value which allows it to be mutated.
 
 Notice that Call does not implement Sync which is declared like this:
 ```rust
@@ -950,6 +950,38 @@ impl<T: ?Sized> !Sync for Cell<T> {}
 ```
 
 Example: [cell.rs](./snippets/src/cell.rs).
+
+### UnsafeCell
+Normally in rust we cannot have multiple mutable references/pointers to the
+same location in memory. This is prevented by the compiler. UnsafeCell enables
+this rule to be broken.
+
+```rust
+    // Multiple *mut pointers are allowed:
+    let un = UnsafeCell::new(18);
+    let p1: *mut i32 = un.get();
+    let p2: *mut i32 = un.get();
+    println!("p1: {:?}, *p1: {}", p1, unsafe { *p1 });
+    println!("p2: {:?}, *p2: {}", p2, unsafe { *p2 });
+```
+It is the callers responsibility to ensure that this access is unique. For
+example this is what Cell uses and it makes sure that there are no other
+pointer accesses.
+
+Example: [unsafecell.rs](./src/unsafecell.rs).
+
+```rust
+#[inline(always)]
+#[stable(feature = "rust1", since = "1.0.0")]
+#[rustc_const_stable(feature = "const_unsafecell_get", since = "1.32.0")]
+pub const fn get(&self) -> *mut T {
+    self as *const UnsafeCell<T> as *const T as *mut T
+}
+```
+This is casting self into a raw const pointer, and then casts that as const T
+and then casts that into a mutable raw pointer. This type of casting is not
+unsafe, it is the potential usage of the cast that is and needs an unsafe block.
+
 
 ### Ref
 
