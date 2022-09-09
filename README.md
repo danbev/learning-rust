@@ -3282,3 +3282,37 @@ rustc 1.63.0-beta.2 (6c1f14289 2022-06-28)
 ```console
 $ rustc -W help
 ```
+
+### MaybeUninit
+Think about this is terms of C/C++ if declare a variable:
+```c
+  int x;
+```
+The value of x would be an address into the stack memory region. There might be
+some data at that address which would then be become the value of x. This is
+called uninitialized data, and it would be anything that happens to be on the
+stack. 
+We can't write something like this in Rust, for example the following will
+result in a compilation error:
+```rust
+$ make out/maybeuninit
+rustc +nightly --edition=2021 -o out/maybeuninit -g src/maybeuninit.rs
+error[E0381]: used binding `x` isn't initialized
+  --> src/maybeuninit.rs:10:20
+   |
+9  |     let x: i32;
+   |         - binding declared here but left uninitialized
+10 |     println!("{}", x);
+   |                    ^ `x` used here but it isn't initialized
+
+```
+
+### Zero-sized type (ZST)
+Is a type that occupies no memory and is optimized away by the compiler.
+Examples:
+* () (empty tuble/unit type)
+* ! (never type)
+* structs, unions, and tuples if all of their fields are zero-sized. 
+* enums if all variants are zero-sized
+* PhantomData
+
