@@ -920,6 +920,96 @@ Global::allocate is a method which takes a Layout. A Layout contains the
 requested size and alignement that the program is asking to allocator to find
 and allow for it to use.
 
+### UnsafeCell
+In Rust there is no way to cast a shared reference (&T) to an exclusive
+reference (&mut T), except if we use UnsafeCell.
+
+Normally in rust we cannot have multiple mutable references/pointers to the
+same location in memory. This is prevented by the compiler. UnsafeCell enables
+this rule to be broken.
+
+```rust
+    // Multiple *mut pointers are allowed:
+    let un = UnsafeCell::new(18);
+    let p1: *mut i32 = un.get();
+    let p2: *mut i32 = un.get();
+    println!("p1: {:?}, *p1: {}", p1, unsafe { *p1 });
+    println!("p2: {:?}, *p2: {}", p2, unsafe { *p2 });
+```
+It is the callers responsibility to ensure that this access is unique. For
+example this is what Cell uses and it makes sure that there are no other
+pointer accesses.
+
+Just thinking about this a little more; Rust is a frontend for LLVM just like
+there are frontends for C. Now, we know that in C we can cast a const pointer
+to a normal pointer without any issues. 
+
+Example: [unsafecell.rs](./src/unsafecell.rs).
+
+UnsafeCell can be found in rust/library/core/src/cell.rs and is declared like
+this:
+```rust
+#[lang = "unsafe_cell"]
+#[repr(transparent)]
+pub struct UnsafeCell<T: ?Sized> {
+    value: T,
+}
+```
+So looking at the struct is is just one field, `value` of type T.
+
+Also note the usage of a lang item, `unsafe_cell`.
+
+To create a new instance:
+```rust
+    #[inline(always)]
+    pub const fn new(value: T) -> UnsafeCell<T> {
+        UnsafeCell { value }
+    }
+```
+And is this also very simple, just returns a new UnsafeCell with the passed
+in value.
+
+There is a function named `into_inner` which returns a copy of the value:
+```rust
+   pub const fn into_inner(self) -> T {                                        
+        self.value                                                              
+   }
+```
+
+So lets take a closer look at `get`:
+```rust
+#[rustc_const_stable(feature = "const_unsafecell_get", since = "1.32.0")]
+pub const fn get(&self) -> *mut T {
+    self as *const UnsafeCell<T> as *const T as *mut T
+}
+```
+Get takes an immutable reference to self (&self), which is then casted to
+`*const UnsafeCell<T>`. which is then casted to `*const T` which in trun casted
+to `*mut T. We an "unpack" that to hoppfully make it a little clearer:
+```rust
+    // The following is an example of what UnsafeCell::get does with regards
+    // to casting:
+    let c = UnsafeCell::new(4);
+    // So this an immutable ref to an UnsafeCell:
+    let c_ref: &UnsafeCell<i32> = &c;
+    // The following if the first cast to a raw const pointer to UnsafeCell<T>:
+    let raw_const_un_ptr: *const UnsafeCell<i32> = c_ref as *const UnsafeCell<i32>;
+    // The following is casting the raw const pointer to UnsafeCell<T> to a 
+    // const pointer to T:
+    let raw_const_ptr: *const i32 = raw_const_un_ptr as *const i32;
+    // The following is the last cast which is from a raw const pointer to a
+    // raw mutable pointer.
+    let raw_ptr: *mut i32 = raw_const_ptr as *mut i32;
+```
+This is casting self into a raw const pointer, and then casts that as const T
+and then casts that into a mutable raw pointer. This type of casting is not
+unsafe, it is the potential usage of the cast that is and needs an unsafe block.
+In the comment for `get` we can find
+```rust
+// We can just cast the pointer from `UnsafeCell<T>` to `T` because of
+// #[repr(transparent)].
+```
+
 ### repr(transparent)
 [Documentation](https://doc.rust-lang.org/1.26.2/unstable-book/language-features/repr-transparent.html)
 This is for telling the compiler that a type is only for type safety on the Rust
@@ -931,6 +1021,29 @@ Allows for shared mutable containers in Rust. So normally you can only have a
 single mutable reference but this allows multiple mutable pointers to the same
 data. This can be done because a reference is never returned by any of the
 methods in Cell.
+
+```rust
+    let cell = Cell::new(18);
+```
+The Cell struct looks like this:
+```rust
+    #[stable(feature = "rust1", since = "1.0.0")]
+    #[repr(transparent)]
+    pub struct Cell<T: ?Sized> {
+        value: UnsafeCell<T>,
+    }
+```
+Notice that is only has a single `value` member of type `UnsafeCell<T>`.
+
+`Cell::new` just calls `UnsafeCell:new`:
+```rust
+
+    #[rustc_const_stable(feature = "const_cell_new", since = "1.24.0")]
+    #[inline]
+    pub const fn new(value: T) -> Cell<T> {
+        Cell { value: UnsafeCell::new(value) }
+    }
+```
 
 Cell is generic so it expects a type to be specified when creating an instance
 of it.
@@ -955,38 +1068,6 @@ impl<T: ?Sized> !Sync for Cell<T> {}
 ```
 
 Example: [cell.rs](./snippets/src/cell.rs).
-
-### UnsafeCell
-Normally in rust we cannot have multiple mutable references/pointers to the
-same location in memory. This is prevented by the compiler. UnsafeCell enables
-this rule to be broken.
-
-```rust
-    // Multiple *mut pointers are allowed:
-    let un = UnsafeCell::new(18);
-    let p1: *mut i32 = un.get();
-    let p2: *mut i32 = un.get();
-    println!("p1: {:?}, *p1: {}", p1, unsafe { *p1 });
-    println!("p2: {:?}, *p2: {}", p2, unsafe { *p2 });
-```
-It is the callers responsibility to ensure that this access is unique. For
-example this is what Cell uses and it makes sure that there are no other
-pointer accesses.
-
-Example: [unsafecell.rs](./src/unsafecell.rs).
-
-```rust
-#[inline(always)]
-#[stable(feature = "rust1", since = "1.0.0")]
-#[rustc_const_stable(feature = "const_unsafecell_get", since = "1.32.0")]
-pub const fn get(&self) -> *mut T {
-    self as *const UnsafeCell<T> as *const T as *mut T
-}
-```
-This is casting self into a raw const pointer, and then casts that as const T
-and then casts that into a mutable raw pointer. This type of casting is not
-unsafe, it is the potential usage of the cast that is and needs an unsafe block.
-
 
 ### Ref
 
