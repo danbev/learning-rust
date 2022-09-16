@@ -1,7 +1,12 @@
 ## lang_item
 [lang_item](https://doc.rust-lang.org/beta/unstable-book/language-features/lang-items.html)
-is decribes as a pluggable feature that the rust compiler has. This document
-attempts to show how one such lang_item works, namely `unsafe_cell`.
+is decribes as a pluggable feature that the rust compiler has. 
+
+A full list of all `lang_items`'s can be found in
+[rustc_hir::lang_items::LangItem](https://doc.rust-lang.org/nightly/nightly-rustc/rustc_hir/lang_items/enum.LangItem.html).
+
+This document attempts to show how one such lang_item works, namely
+`unsafe_cell`.
 
 ### UnsafeCell
 UnsafeCell can be found in `rust/library/core/src/cell.rs` and is declared like
@@ -33,7 +38,9 @@ macro_rules! language_item_table {
 ) => {              
 ```
 One things to note here which got me the first time, is that (group:expr) is
-optional and not used for UnsafeCell, but is used for example for `Add(Op)`.
+optional and not used for UnsafeCell, but is used for other lang_items like 
+`Add(Op)`.
+
 The following is an approximation of what the macro will be expanded into: 
 ```rust
 pub enum LangItem {
@@ -69,4 +76,53 @@ pub struct LanguageItems {
    }                                                               
  )*   
 }
+```
+So LanguageItems will have a function named [unsafe_cell_type](https://doc.rust-lang.org/nightly/nightly-rustc/rustc_hir/lang_items/struct.LanguageItems.html#method.unsafe_cell_type)
+Lets find out where this function is used:
+```console
+$ grep -Rn unsafe_cell_type compiler/* --exclude=rusty-tags.vi
+compiler/rustc_hir/src/lang_items.rs:219:    UnsafeCell,              sym::unsafe_cell,         unsafe_cell_type,           Target::Struct,         GenericRequirement::None;
+compiler/rustc_middle/src/ty/adt.rs:252:        if Some(did) == tcx.lang_items().unsafe_cell_type() {
+compiler/rustc_typeck/src/variance/terms.rs:111:        (lang_items.unsafe_cell_type(), vec![ty::Invariant])
+```
+
+One usage is in `compiler/rustc_middle/src/ty/adt.rs`
+```rust
+pub struct AdtFlags: u32 {
+     ...
+     /// Indicates whether the type is `UnsafeCell`.
+     const IS_UNSAFE_CELL              = 1 << 9;
+}
+
+impl AdtDefData {
+    pub(super) fn new(
+        tcx: TyCtxt<'_>,
+        did: DefId,
+        kind: AdtKind,
+        variants: IndexVec<VariantIdx, VariantDef>,
+        repr: ReprOptions,
+    ) -> Self {
+        debug!("AdtDef::new({:?}, {:?}, {:?}, {:?})", did, kind, variants, repr);
+        let mut flags = AdtFlags::NO_ADT_FLAGS;
+    }
+    ...
+    if Some(did) == tcx.lang_items().unsafe_cell_type() {
+        flags |= AdtFlags::IS_UNSAFE_CELL;
+    }
+    ...
+}
+
+    /// Returns `true` if this is UnsafeCell<T>.
+    #[inline]
+    pub fn is_unsafe_cell(self) -> bool {
+        self.flags().contains(AdtFlags::IS_UNSAFE_CELL)
+    }
+```
+So lets follow this and see where `is_unsafe_cell` is called.
+
+__wip__
+
+Lets try enableing logging and see if we can identify the log statement above
+```console
+$ RUSTC_LOG=rustc_middle::ty=debug make -B out/unsafecell 2> output
 ```
