@@ -27,6 +27,8 @@ out/async_core: src/async_core.rs
 		-L dependency=/home/danielbevenius/work/rust/learning-rust/async/target/debug/deps \
 		--extern futures=/home/danielbevenius/work/rust/learning-rust/async/target/debug/deps/libfutures-db5560b305d383df.rlib
 
+gdb_unsafecell: out/unsafecell
+	gdb --args ${RUSTC} ${RUSTC_FLAGS} -g -o $<  src/unsafecell.rs
 
 .PHONY: clean
 clean:
