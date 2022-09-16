@@ -1,11 +1,11 @@
-RUSTC = rustc
-RUSTC_FLAGS = +nightly --edition=2021
+RUSTC =/home/danielbevenius/work/rust/rust/build/x86_64-unknown-linux-gnu/stage1/bin/rustc
+RUSTC_FLAGS =--edition=2021
 
 out/%: src/%.rs | out
 	${RUSTC} ${RUSTC_FLAGS} -o $@ -g $<
 
 out:
-	@mkdir out
+	mkdir -p out
 
 expand: out/simple_macro
 	${RUSTC} ${RUSTC_FLAGS} -Zunpretty=expanded src/simple_macro.rs
