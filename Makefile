@@ -27,8 +27,19 @@ out/async_core: src/async_core.rs
 		-L dependency=/home/danielbevenius/work/rust/learning-rust/async/target/debug/deps \
 		--extern futures=/home/danielbevenius/work/rust/learning-rust/async/target/debug/deps/libfutures-db5560b305d383df.rlib
 
+out/unsafecell_2.ll: src/unsafecell_2.rs
+	${RUSTC} ${RUSTC_FLAGS} --emit=llvm-ir -o $@ $<
+
 gdb_unsafecell: out/unsafecell
-	gdb --args ${RUSTC} ${RUSTC_FLAGS} -g -o $<  src/unsafecell.rs
+	gdb --args ${RUSTC} ${RUSTC_FLAGS} -Zmutable-noalias -g -o $<  src/unsafecell.rs
+
+gdb_unsafecell_2: out/unsafecell_2
+	gdb --args ${RUSTC} ${RUSTC_FLAGS} -Zmutable-noalias -g -o $<  src/unsafecell_2.rs
+
+out/mono-filtered.ll: src/mono.rs
+	${RUSTC} ${RUSTC_FLAGS} --emit=llvm-ir -o out/mono.ll $<
+	@${RM} $@
+	rustfilt --input out/mono.ll --output $@
 
 .PHONY: clean
 clean:
