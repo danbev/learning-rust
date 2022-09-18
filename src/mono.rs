@@ -5,6 +5,9 @@ struct Something<T> {
 
 impl<T> Something<T> {
     fn doit(&self) {
+        fn inner_function() {
+        }
+        inner_function();
     }
 }
 

@@ -958,6 +958,86 @@ pub struct UnsafeCell<T: ?Sized> {
 So looking at the struct is is just one field, `value` of type T.
 
 Also note the usage of a lang item, `unsafe_cell`.
+optional and not used for UnsafeCell, but is used for example for `Add(Op)`.
+The following is an approximation of what the macro will be expanded into: 
+```rust
+pub enum LangItem {
+  ...
+  UnsafeCell,
+  ...
+}
+
+impl LangItem { 
+
+  pub fn name(self) -> Symbol {                                       
+     match self {                                                    
+        ...
+        LangItem::UnsafeCell => unsafe_cell_type,
+        ...
+     }                                                               
+  }    
+
+  pub fn group(self) -> Option<LangItemGroup> {                       
+     use LangItemGroup::*;                                           
+         match self {                                                    
+	     LangItem::UnsafeCell => expand_group!(sym:unsafe_cell_type,
+             $( LangItem::$variant => expand_group!($($group)*), )*         
+         }                                                               
+  }    
+
+pub struct LanguageItems {
+  ...
+ $(                                                                  
+    #[doc = concat!("Returns the [`DefId`] of the `", stringify!($name), "` lang item if it is defined.")]
+    pub fn $method(&self) -> Option<DefId> {                        
+        self.items[LangItem::$variant as usize]                     
+   }                                                               
+ )*   
+}
+```
+If we take a look in `compiler/rustc_middle/src/ty/layout.rs`:
+```rust
+impl<'tcx> LayoutCx<'tcx, TyCtxt<'tcx>> {
+    // FIXME(eddyb) perhaps group the signature/type-containing (or all of them?)
+    // arguments of this method, into a separate `struct`.
+    fn fn_abi_new_uncached(
+        &self,
+        sig: ty::PolyFnSig<'tcx>,
+        extra_args: &[Ty<'tcx>],
+        caller_location: Option<Ty<'tcx>>,
+        fn_def_id: Option<DefId>,
+        // FIXME(eddyb) replace this with something typed, like an `enum`.
+        force_thin_self_ptr: bool,
+    ) -> Result<&'tcx FnAbi<'tcx, Ty<'tcx>>, FnAbiError<'tcx>> {
+    ...
+
+```
+
+```console
+$ RUSTC_LOG=rustc_middle::ty=debug make -B out/unsafecell 1> output 2>&1
+```
+
+```rust
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]                                    
+pub enum PointerKind {                                                          
+    /// Most general case, we know no restrictions to tell LLVM.                
+    SharedMutable,                                                              
+                                                                                
+    /// `&T` where `T` contains no `UnsafeCell`, is `dereferenceable`, `noalias` and `readonly`.
+    Frozen,                                                                     
+                                                                                
+    /// `&mut T` which is `dereferenceable` and `noalias` but not `readonly`.   
+    UniqueBorrowed,                                                             
+                                                                                
+    /// `&mut !Unpin`, which is `dereferenceable` but neither `noalias` nor `readonly`.
+    UniqueBorrowedPinned,                                                       
+                                                                                
+    /// `Box<T>`, which is `noalias` (even on return types, unlike the above) but neither `readonly`
+    /// nor `dereferenceable`.                                                  
+    UniqueOwned,                                                                    
+}
+```
+
 
 To create a new instance:
 ```rust
@@ -3401,4 +3481,20 @@ Examples:
 * structs, unions, and tuples if all of their fields are zero-sized. 
 * enums if all variants are zero-sized
 * PhantomData
+
+
+### Generic helper functions
+If we have parts of a generic function implementation that is not generic one
+might be able to reduce the size of the binary by adding an inner function that
+does not operate on the generic part item/type.
+
+[src/mono.rs](./src/mono.rs) tries to show this by inspecting the generated
+llvm ir:
+```console
+$ make -B out/mono-filtered.ll
+```
+And then we can inspect the output in `out/mono-filtered.ll` and see that
+we have two implementations of the generic function `doit`, one for `u8` and one
+for `u16`. But there is only a single function for
+`mono::Something<T>::doit::inner_function`.
 
