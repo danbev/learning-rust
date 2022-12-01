@@ -11,6 +11,7 @@ hkdf = "0.11.0"
 hex = "0.4.3"
 typenum = "1.13.0"
 generic-array = "0.14"
+ring = "0.16.20"
 
 [[bin]]
 name = "main"
@@ -23,3 +24,7 @@ path = "src/typenum.rs"
 [[bin]]
 name = "genarray"
 path = "src/generic-array.rs"
+
+[[bin]]
+name = "ecdsa"
+path = "src/ecdsa.rs"
