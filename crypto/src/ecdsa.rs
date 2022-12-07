@@ -56,6 +56,7 @@ fn main() {
         })
         .unwrap();
     println!("ecc_oid: {:02x?}", ecc_oid.as_slice_less_safe());
+    println!("alg_oid: {:02x?}", alg_oid.as_slice_less_safe());
 
     let bytes = pkcs8_doc.as_ref();
     let key_pair =
