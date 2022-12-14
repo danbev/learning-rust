@@ -15,11 +15,8 @@ const EC_PRIVATE_KEY_FORMAT: &'static str = "MHcCAQEEIFjdJCw6Lkx1VPYtdnbihRKoLFb
 
 const PRIME_256_V1: &'static [u8] = &[0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07];
 
-fn main() {
-    println!("base64: {:?}", &EC_PRIVATE_KEY_FORMAT);
-    let decoded = decode(&EC_PRIVATE_KEY_FORMAT).unwrap();
-    println!("decoded: {:02x?}", decoded);
-    let input = Input::from(&decoded);
+fn read_private_key(bytes: &[u8]) -> (Vec<u8>, Vec<u8>) {
+    let input = Input::from(bytes);
     let (octet_string, curve_oid) = input
         .read_all(derp::Error::Read, |input| {
             let (octet_string, curve_oid) = derp::nested(input, Tag::Sequence, |input| {
@@ -36,13 +33,20 @@ fn main() {
                 println!("curve_oid: {:?}", curve_oid);
                 let _param = derp::read_tag_and_get_value(input)?;
                 println!("param: {:?}", param);
-                Ok((octet_string, curve_oid))
+                Ok((octet_string.as_slice_less_safe(), curve_oid))
             })?;
             Ok((octet_string, curve_oid))
         })
         .unwrap();
+    (octet_string.to_vec(), curve_oid.to_vec())
+}
+
+fn main() {
+    println!("base64: {:?}", &EC_PRIVATE_KEY_FORMAT);
+    let decoded = decode(&EC_PRIVATE_KEY_FORMAT).unwrap();
+    let (octet_string, curve_oid) = read_private_key(&decoded);
     println!("-----------------------------");
-    println!("priv_key: {:02x?}", octet_string.as_slice_less_safe());
+    println!("priv_key: {:02x?}", octet_string);
     if curve_oid == PRIME_256_V1 {
         println!("curve_oid: {:02x?} {}", curve_oid, "prime256v1");
     }
