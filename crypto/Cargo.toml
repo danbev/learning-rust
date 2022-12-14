@@ -14,6 +14,7 @@ generic-array = "0.14"
 ring = "0.16.20"
 derp = "0.0.14"
 untrusted = "0.7.0"
+base64 = "0.20.0"
 
 [[bin]]
 name = "main"
@@ -34,3 +35,7 @@ path = "src/ecdsa.rs"
 [[bin]]
 name = "derp"
 path = "src/derp.rs"
+
+[[bin]]
+name = "ec-parse"
+path = "src/ec-parse.rs"
