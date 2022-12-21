@@ -1,8 +1,4 @@
 use base64;
-use ring::{
-    rand,
-    signature::{self, ECDSA_P256_SHA256_ASN1_SIGNING},
-};
 use sigstore::crypto::signing_key::SigStoreKeyPair;
 use std::fs;
 
