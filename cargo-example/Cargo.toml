@@ -1,0 +1,17 @@
+[package]
+name = "cargo-example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.0.32", features = ["derive"] }
+
+[[bin]]                                                                           
+  name = "cargo-non-filtered"                                                     
+  path = "src/non-filtered.rs"
+
+[[bin]]                                                                           
+  name = "cargo-filtered"                                                     
+  path = "src/filtered.rs"
+
+
