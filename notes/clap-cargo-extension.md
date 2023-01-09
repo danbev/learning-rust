@@ -3,7 +3,7 @@ This is an issue that I ran into then trying to run a cargo extension which
 used clap.
 
 For example, if we have a binary/application like
-[cargo-non-filtered](cargo-example/src/non-filtered) and install it:
+[cargo-non-filtered](../cargo-example/src/non-filtered) and install it:
 ```console
 $ cargo install --path .
 ```
@@ -17,7 +17,7 @@ Usage: cargo-non-filtered --something <SOMETHING>
 For more information try '--help'
 ```
 
-And if we try [cargo-filtered](cargo-example/src/filtered) and run it:
+And if we try [cargo-filtered](../cargo-example/src/filtered) and run it:
 ```console
 $ cargo filtered --help
 args: Args { inner: ["/home/danielbevenius/.cargo/bin/cargo-filtered", "filtered", "--help"] }
@@ -29,3 +29,5 @@ Options:
   -h, --help                   Print help information
   -V, --version                Print version information
 ```
+Notice that there is a second argument `filtered` in this case, and that this
+is getting filtered out before clap is parsing the arguments.
