@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.0.32", features = ["derive"] }
+clap-cargo = "0.10.0"
 
 [[bin]]                                                                           
   name = "cargo-non-filtered"                                                     
@@ -14,4 +15,7 @@ clap = { version = "4.0.32", features = ["derive"] }
   name = "cargo-filtered"                                                     
   path = "src/filtered.rs"
 
+[[bin]]                                                                           
+  name = "cargo-clap"                                                     
+  path = "src/cargo-clap.rs"
 
