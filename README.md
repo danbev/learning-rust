@@ -3498,3 +3498,15 @@ we have two implementations of the generic function `doit`, one for `u8` and one
 for `u16`. But there is only a single function for
 `mono::Something<T>::doit::inner_function`.
 
+
+### std::str::FromStr
+When we see this in code:
+```rustc
+   "string".parse();
+```
+try to remember that this syntactic suger for:
+```rustc
+  FromStr::from_str("string")
+```
+We can implement FromStr for own own type as well,
+[from_str.rs](src/from_str.rs) contains an example.
