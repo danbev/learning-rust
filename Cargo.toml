@@ -9,4 +9,6 @@ exclude = ["mio-example", "crypto", "startup", "embedded", "embassy",
            "features", "drogue-device", "xshell", "ffi_cargo",
            "trait_usage/sometrait", "trait_usage/impl1",
            "trait_usage/impl2", "trait_usage/usage",
-           "trait_usage/driver", "future"]
+           "static_cell", "streams", "chumsky",
+           "trait_usage/driver", "future", "nb", "panic", "interrupts",
+           "cargo-example", "cargo-package", "tuf-keyid"]
