@@ -1,0 +1,26 @@
+{
+  "signed": {
+    "_type": "targets",
+    "spec_version": "1.0.0",
+    "version": 1,
+    "expires": "2023-02-13T08:09:29.901531961Z",
+    "targets": {
+      "artifact.txt": {
+        "length": 10,
+        "hashes": {
+          "sha256": "4bc453b53cb3d914b45f4b250294236adba2c0e09ff6f03793949e7e39fd4cc1"
+        }
+      }
+    },
+    "delegations": {
+      "keys": {},
+      "roles": []
+    }
+  },
+  "signatures": [
+    {
+      "keyid": "4b5949f440d886b8903b12aff850d788df1ef7cd506a6e8fd39b1706b4d33d5e",
+      "sig": "93315df8ac26a59f1dfba75627c6ca3f06b2b3537c39c33e1d6ed4f8d3f7de9906b02b0fa8b82402a7d7f391b64fcb95a4d9a4b1c8e521af1a9d7f6e39b2604974f4bc9fcccf03a34317f189158d7fbdbd699ebb25653fae62052210d83a0d8a654d27242c41c30d7ceee5c9f4c6d2cca5bc208960cdb01ba28733a5e8578131335bfc9afa7d151fe521767c0463780d446a3d2b3356fe8b74383580e849fd918adf74966af52a5ef4e6805fd09a47710b8736d40302028546875cea98a0b103d8783cf371ab53ae12a36a2f0171e594de8c53ed5302861f90d0c467657d3b968aaf35b257be84c4f9e3ac341ae7830848eab3035d3c178243d7a1f6778d2305"
+    }
+  ]
+}

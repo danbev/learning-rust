@@ -1,0 +1,3 @@
+tuf_client/*snapshot.json
+tuf_client/*targets.json
+tuf_client/*timestamp.json

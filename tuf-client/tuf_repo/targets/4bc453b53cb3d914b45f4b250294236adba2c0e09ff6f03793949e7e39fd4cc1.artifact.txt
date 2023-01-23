@@ -1,0 +1,1 @@
+/home/danielbevenius/work/rust/learning-rust/tuf-client/artifacts/artifact.txt

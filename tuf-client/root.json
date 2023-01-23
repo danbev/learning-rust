@@ -1,0 +1,50 @@
+{
+  "signed": {
+    "_type": "root",
+    "spec_version": "1.0.0",
+    "consistent_snapshot": true,
+    "version": 1,
+    "expires": "2023-03-06T08:09:29Z",
+    "keys": {
+      "4b5949f440d886b8903b12aff850d788df1ef7cd506a6e8fd39b1706b4d33d5e": {
+        "keytype": "rsa",
+        "keyval": {
+          "public": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAouqVcsYmW9U67mh3XYQd\nLq05vxwS8ElHO5AUIwSYjEBDVeVLTLo6wbMwm+5vdPbDG7WvQuHdpdRMt+T048VX\nLX3ttfNUvO02dBH501ylPM3INWKsi65bjOtOyj0SZ1mtKP5hb6pLqyGJUuPZihyw\nxLzpOjSrv0wh7b5DDVBRQ8Mwp+iQlJi9JgEPRUmI69WwpAJe54f1x8soPlf7fWGb\n5kvNEeVMDIaGKaVRdZRelKyV7UWoA5xF/pHIFIoHluX08ubjy6t2dhYFnTV8HMFx\nLMoUobpEKVnqbVGh/baS40PYuGtck996K3qacJD/Dt81PDQbk9E+lMOpa1y0JIeB\nxwIDAQAB\n-----END PUBLIC KEY-----"
+        },
+        "scheme": "rsassa-pss-sha256"
+      }
+    },
+    "roles": {
+      "root": {
+        "keyids": [
+          "4b5949f440d886b8903b12aff850d788df1ef7cd506a6e8fd39b1706b4d33d5e"
+        ],
+        "threshold": 1
+      },
+      "snapshot": {
+        "keyids": [
+          "4b5949f440d886b8903b12aff850d788df1ef7cd506a6e8fd39b1706b4d33d5e"
+        ],
+        "threshold": 1
+      },
+      "targets": {
+        "keyids": [
+          "4b5949f440d886b8903b12aff850d788df1ef7cd506a6e8fd39b1706b4d33d5e"
+        ],
+        "threshold": 1
+      },
+      "timestamp": {
+        "keyids": [
+          "4b5949f440d886b8903b12aff850d788df1ef7cd506a6e8fd39b1706b4d33d5e"
+        ],
+        "threshold": 1
+      }
+    }
+  },
+  "signatures": [
+    {
+      "keyid": "4b5949f440d886b8903b12aff850d788df1ef7cd506a6e8fd39b1706b4d33d5e",
+      "sig": "3eedd41fa7bbcb250348eee768317099c2ea595e24e2e5fa73e2154c67463148b1269c998857a9331628ad5aa6735d3bd17c28be561109a0e08c51cda8cd9ef2dfec9112b8ee54641d24036fb1f97aa641268e54e3ef2dc82d0f861686400c78e40569f352031f168c2d0abd2641946c111c37a7e5a349c1ab4c30f450a934f2a8e29d610b1d0f0ed8d1447c1d82cf66e44bc9b1a80860144875b00a775e762bf7a640129269496c626770d3781f37aa833ccc01bf0a16264c6aea05ff675a42f6569c3f9e3998ccb85188fd18636f736a14c316f80d1da70ea7023864e7113415edfaacac87dbc8b2a86a8ba0f0eb477e828151feac3be8225fa69e65a883f3"
+    }
+  ]
+}
