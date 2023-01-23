@@ -1,9 +1,12 @@
 use clap::Parser;
 use std::fs;
 use std::fs::File;
+use std::io::prelude::*;
 use std::path::PathBuf;
+use std::str;
+use std::str::FromStr;
 use tough;
-use tough::{ExpirationEnforcement, FilesystemTransport, RepositoryLoader};
+use tough::{ExpirationEnforcement, FilesystemTransport, RepositoryLoader, TargetName};
 use url::Url;
 
 #[derive(Parser, Debug)]
@@ -61,4 +64,17 @@ fn main() {
         .datastore(&download_dir)
         .load()
         .unwrap();
+
+    println!("Tring to fetch artifact.txt from TUF repository");
+    let artifact = repository
+        .read_target(&TargetName::from_str("artifact.txt").unwrap())
+        .unwrap();
+    if let Some(mut a) = artifact {
+        let mut buffer = Vec::new();
+        a.read_to_end(&mut buffer).unwrap();
+        println!(
+            "Fetched artifact.text: {:?}",
+            str::from_utf8(&buffer).unwrap()
+        );
+    }
 }
