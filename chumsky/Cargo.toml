@@ -15,3 +15,7 @@ path = "src/first.rs"
 [[bin]]
 name = "second"
 path = "src/main.rs"
+
+[[bin]]
+name = "primitives"
+path = "src/primitives.rs"

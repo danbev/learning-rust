@@ -1,13 +1,14 @@
 ## Chumsky
-Is described as a parser library that uses parser combinator. So what are
-parser combinators?
+Is described as a parser library that uses parser combinator.
+So what are parser combinators?
 
 [Parser combinator](https://en.wikipedia.org/wiki/Parser_combinator) is
 described as a higher order function that takes several parsers as input and
 returns a new parser as output.
-The way I understand this is that we define parsers for single item (token) that
-we want to parse. And we then create parsers for each type of item we want to
-parse.
+
+The way I understand this is that we define a parsers for single item (token)
+that we want to parse. And we then create parsers for each type of item we want
+to parse.
 
 So we create a Parser for each type/item/token/thing:
 ```
@@ -44,3 +45,7 @@ it is filtered out:
 impl<I: Clone, F: Fn(&I) -> bool, E: Error<I>> Parser<I, I> for Filter<F, E> {
 ```
 
+### Running
+```console
+$ cargo r --bin first first.foo
+```
