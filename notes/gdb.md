@@ -108,3 +108,20 @@ def register_printers(objfile):
     objfile.pretty_printers.append(lookup)
 ```
 And `lookup` is a function in the same file.
+
+So those are the files in rust source tree, where are these installed when we
+install Rust using rustup?
+To answer that we need to find the `sysroot` of our installed `rustc`:
+```console
+$ rustc --print=sysroot
+/home/danielbevenius/.rustup/toolchains/stable-x86_64-unknown-linux-gnu
+```
+And we can find the the files in:
+```console
+$ ls `rustc --print=sysroot`/lib/rustlib/etc/*gdb*.py
+~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/etc/gdb_load_rust_pretty_printers.py
+~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/etc/gdb_lookup.py
+~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/etc/gdb_providers.py
+```
+So this can be useful if you want to check what is actually happening in
+these python scripts.
