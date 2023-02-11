@@ -80,3 +80,31 @@ $38 = seedwing_policy_engine::package::Package {path: seedwing_policy_engine::ru
 ```
 And if we keep doing that we can list a specific index.
 
+### pretty-printers
+We can list the pretty-printers that have been registered using:
+```console
+(gdb) info pretty-printer 
+global pretty-printers:
+  builtin
+    mpx_bound128
+objfile /home/danielbevenius/work/security/seedwing/seedwing-policy/target/debug/seedwing-policy-server pretty-printers:
+  lookup
+```
+Notice `lookup`, so where does this come from?  
+
+
+If we look in rust source tree we can find
+`src/etc/gdb_load_rust_pretty_printers.py` which contains:
+```python
+import gdb                                                                      
+import gdb_lookup                                                               
+gdb_lookup.register_printers(gdb.current_objfile())
+```
+The first import it `gdb` module which provides access to the gdb api.
+The second import is importing the file `gdb_lookup.py` from the same directory.
+And in `src/etc/gdb_lookup.py` have a function named `register_printers`:
+```python
+def register_printers(objfile):                                                 
+    objfile.pretty_printers.append(lookup)
+```
+And `lookup` is a function in the same file.
