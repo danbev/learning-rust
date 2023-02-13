@@ -21,11 +21,16 @@ $ rustup component add rust-src
 In gdb you might not be able to step into Rust std sources and see an message/
 path like this:
 ```console
-alloc::alloc::exchange_malloc (size=4, align=1) at /rustc/0d1754e8bf6942b4c1d24d7c923438782129ba5a/library/alloc/src/alloc.rs:317
+/rustc/fc594f15669680fa70d255faec3ca3fb507c3405/library/core/src/future/future.rs: No such file or directory.
 ```
 This can be worked around by adding the following to a `.gdbinit`:
 ```console
-set substitute-path '/rustc/0d1754e8bf6942b4c1d24d7c923438782129ba5a' '/home/danielbevenius/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust
+set substitute-path '/rustc/fc594f15669680fa70d255faec3ca3fb507c3405' '/home/danielbevenius/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust
+```
+You can find the correct path to use as the second argument using:
+```console
+$ rustc --print sysroot
+/home/danielbevenius/.rustup/toolchains/stable-x86_64-unknown-linux-gnu
 ```
 One thing to note is that we might have to update the hash after updating Rust.
 
@@ -1159,6 +1164,31 @@ Example: [cell.rs](./snippets/src/cell.rs).
 Reference counting type for multiple ownerships. When you take a new refererence
 using clone() the reference count will be incremented. Internally it uses a
 Cell
+
+```console
+$ rust-gdb out/rc 
+Reading symbols from out/rc...
+(gdb) br rc.rs:4
+Breakpoint 1 at 0x9347: file src/rc.rs, line 4.
+(gdb) r
+Starting program: /home/danielbevenius/work/rust/learning-rust/out/rc 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+
+Breakpoint 1, rc::main () at src/rc.rs:4
+4	    let rc = Rc::new(String::from("bajja"));
+(gdb) n
+5	    println!("{}", rc);
+(gdb) p rc
+$1 = Rc(strong=1, weak=0) = {value = "bajja", strong = 1, weak = 0}
+```
+Note that we import `use std::rc::Rc;` but if we inspect the type we will
+see `alloc::rc::Rc`. This is because in `library/std/src/lib.rs` there is the
+following use statement:
+```rust
+pub use alloc_crate::rc;
+```
+Notice that this is done in the crate `std::
 
 ### Ref<T> RefMut<T>
 
