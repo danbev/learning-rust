@@ -125,3 +125,16 @@ $ ls `rustc --print=sysroot`/lib/rustlib/etc/*gdb*.py
 ```
 So this can be useful if you want to check what is actually happening in
 these python scripts.
+
+### Print String
+```console
+(gdb) p each
+$30 = (*mut alloc::string::String) 0x5555586f4ae0
+
+(gdb) p *each
+$31 = alloc::string::String {vec: alloc::vec::Vec<u8, alloc::alloc::Global> {buf: alloc::raw_vec::RawVec<u8, alloc::alloc::Global> {ptr: core::ptr::unique::Unique<u8> {pointer: core::ptr::non_null::NonNull<u8> {pointer: 0x5555586f4ab0}, _marker: core::marker::PhantomData<u8>}, cap: 12, alloc: alloc::alloc::Global}, len: 12}}
+
+(gdb) printf "%s\n", (*each).vec.buf.ptr.pointer.pointer
+sample-data/
+```
+
