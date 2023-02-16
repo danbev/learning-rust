@@ -138,3 +138,20 @@ $31 = alloc::string::String {vec: alloc::vec::Vec<u8, alloc::alloc::Global> {buf
 sample-data/
 ```
 
+### Printing Anonymous String enum
+```console
+(gdb) p payload.String 
+Attempting to access named field String of tuple variant serde_json::value::Value::String, which has only anonymous field
+```
+But we can see some of its data using:
+```console
+(gdb) p payload
+$5 = serde_json::value::Value::String(alloc::string::String {vec: alloc::vec::Vec<u8, alloc::alloc::Global> {buf: alloc::raw_vec::RawVec<u8, alloc::alloc::Global> {ptr: core::ptr::unique::Unique<u8> {pointer: core::ptr::non_null::NonNull<u8> {pointer: 0x7ffff0047f60}, _marker: core::marker::PhantomData<u8>}, cap: 3, alloc: alloc::alloc::Global}, len: 3}}
+```
+And using the `pointer` field we can still print the string at that memory
+location:
+```console
+(gdb) printf "%s\n",  0x7ffff0047f60
+jim�
+```
+
