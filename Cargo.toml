@@ -11,4 +11,5 @@ exclude = ["mio-example", "crypto", "startup", "embedded", "embassy",
            "trait_usage/impl2", "trait_usage/usage",
            "static_cell", "streams", "chumsky",
            "trait_usage/driver", "future", "nb", "panic", "interrupts",
-           "cargo-example", "cargo-package", "tuf-keyid", "tuf-client"]
+           "cargo-example", "cargo-package", "tuf-keyid", "tuf-client",
+           "actix-example"]
