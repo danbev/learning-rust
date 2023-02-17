@@ -4,6 +4,11 @@ This page contains notes about the Rust compiler `rustc`.
 The compiler can be found in a subdirectory named `rustc` of the rust-lang rust
 repository.
 
+### Building rustc
+```console
+$ ./x.py build
+````
+
 ### rustc command line options
 ```console
 $ rustc --print crate-name src/bin/gpio_async.rs 
@@ -17,6 +22,7 @@ Show all Codegen options:
 ```console
 $ rustc -C help
 ```
+Getting the same information with cargo:
 ```console
 $ cargo rustc --bin gpio_async --  -C help
 ```
@@ -27,7 +33,7 @@ $ rustc -Z help
 ```
 
 ### rustc walkthrough
-Some of this walk through might seem like it going through unnecessary details
+Some of this walk through might seem like it's going through unnecessary details
 but this is intentional as I'm fairly new to Rust and I believe that there are
 design patterns etc that I can pick up from going through the code base.
 
@@ -51,8 +57,9 @@ Lets start a debug session using an empty main function and a locally built
 `rustc` compiler with `debug = true` set in config.toml and then rebuild the
 compiler:
 ```console
+[rust]
 debug = true
-debug_logging = true
+debug-logging = true
 ...
 debuginfo-level = 2
 ```
