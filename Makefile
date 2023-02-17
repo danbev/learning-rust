@@ -8,20 +8,20 @@ out/%: src/%.rs | out
 out:
 	mkdir -p out
 
-expand: out/simple_macro
-	${RUSTC} ${RUSTC_FLAGS} -Zunpretty=expanded src/simple_macro.rs
+expand: out/simple-macro
+	${RUSTC} ${RUSTC_FLAGS} -Zunpretty=expanded src/simple-macro.rs
 
-ast-tree: out/simple_macro
-	${RUSTC} ${RUSTC_FLAGS} -Zunpretty=ast-tree src/simple_macro.rs
+ast-tree: out/simple-macro
+	${RUSTC} ${RUSTC_FLAGS} -Zunpretty=ast-tree src/simple-macro.rs
 
-ast: out/simple_macro
-	${RUSTC} ${RUSTC_FLAGS} -Zunpretty=ast src/simple_macro.rs
+ast: out/simple-macro
+	${RUSTC} ${RUSTC_FLAGS} -Zunpretty=ast src/simple-macro.rs
 
-hir: out/simple_macro
-	${RUSTC} ${RUSTC_FLAGS} -Zunpretty=hir src/simple_macro.rs
+hir: out/simple-macro
+	${RUSTC} ${RUSTC_FLAGS} -Zunpretty=hir src/simple-macro.rs
 
-mir: out/simple_macro
-	${RUSTC} ${RUSTC_FLAGS} -Zunpretty=mir src/simple_macro.rs
+mir: out/simple-macro
+	${RUSTC} ${RUSTC_FLAGS} -Zunpretty=mir src/simple-macro.rs
 
 out/async_core: src/async_core.rs
 	${RUSTC} ${RUSTC_FLAGS} -o $@ -g $< \
