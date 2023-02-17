@@ -1,5 +1,6 @@
-RUSTC =/home/danielbevenius/work/rust/rust/build/x86_64-unknown-linux-gnu/stage1/bin/rustc
-RUSTC_FLAGS =--edition=2021
+#RUSTC =/home/danielbevenius/work/rust/rust/build/x86_64-unknown-linux-gnu/stage1/bin/rustc
+RUSTC = rustc
+RUSTC_FLAGS ="-Copt-level=0" "--edition=2021"
 
 out/%: src/%.rs | out
 	${RUSTC} ${RUSTC_FLAGS} -o $@ -g $<

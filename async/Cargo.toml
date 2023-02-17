@@ -8,3 +8,16 @@ edition = "2018"
 
 [dependencies]
 futures = { version = "0.3.*" }
+tokio = { version = "1.25.0", features = ["full"] }
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+[[bin]]
+name = "async-move"
+path = "src/async-move.rs"
+
+[[bin]]
+name = "async-main"
+path = "src/async-main.rs"

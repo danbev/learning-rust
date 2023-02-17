@@ -19,6 +19,5 @@ fn main() {
         println!("async closure");
     };
     println!("Before calling async closure...");
-
     block_on(closure());
 }

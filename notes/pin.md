@@ -1,7 +1,7 @@
 ## Pin
 Rust types fall into 2 different categories, types that can be moved around
 in memory like primitives (numbers, bools, etc, and all types made up on these
-primitive types). These are called Unpin types. Unpin is an autotrait which
+primitive types). These are called Unpinned types. Unpin is an autotrait which
 all types that are moveble get by default.
 
 Then there are also types that cannot be moved around in memory as this will
@@ -132,3 +132,74 @@ pub struct Pin<P> {
     pub pointer: P,
 }
 ```
+### Pin::Box
+Just like in the normal pin situation we don't want the thing in Box (on the
+heap) to be moved. So we wrap the Box in a Pin which sounds reaonable.
+
+Lets take a look at an example:
+```rust
+    let pinned_x = Box::pin(18);
+```
+And we can start a debugging session and step-through the code using:
+```console
+$ rust-gdb --args out/pin-box 
+Reading symbols from out/pin-box...
+(gdb) br pin-box.rs:4
+Breakpoint 1 at 0x88f7: file src/pin-box.rs, line 4.
+
+5	    let pinned_x = Box::pin(18);
+(gdb) s
+alloc::boxed::{impl#0}::pin<i32> (x=18) at /rustc/0416b1a6f6d5c42696494e1a3a33580fd3f669d8/library/alloc/src/boxed.rs:286
+286	    pub fn pin(x: T) -> Pin<Box<T>> {
+(gdb) l
+281	    /// construct a (pinned) `Box` in a different way than with [`Box::new`].
+282	    #[cfg(not(no_global_oom_handling))]
+283	    #[stable(feature = "pin", since = "1.33.0")]
+284	    #[must_use]
+285	    #[inline(always)]
+286	    pub fn pin(x: T) -> Pin<Box<T>> {
+287	        (#[rustc_box]
+288	        Box::new(x))
+289	        .into()
+290	    }
+```
+So notice that first a new Box is created and we are copying our value `x` into
+a location on the heap. After that `into()` is called.
+
+```console
+(gdb) l
+1472	    ///
+1473	    /// Constructing and pinning a `Box` with <code><Pin<Box\<T>>>::from([Box::new]\(x))</code>
+1474	    /// can also be written more concisely using <code>[Box::pin]\(x)</code>.
+1475	    /// This `From` implementation is useful if you already have a `Box<T>`, or you are
+1476	    /// constructing a (pinned) `Box` in a different way than with [`Box::new`].
+1477	    fn from(boxed: Box<T, A>) -> Self {
+1478	        Box::into_pin(boxed)
+1479	    }
+1480	}
+1481	
+```
+And `Box::into_pin` looks like this:
+```console
+(gdb) l -
+1224	    pub const fn into_pin(boxed: Self) -> Pin<Self>
+1225	    where
+1226	        A: 'static,
+1227	    {
+1228	        // It's not possible to move or replace the insides of a `Pin<Box<T>>`
+1229	        // when `T: !Unpin`, so it's safe to pin it directly without any
+1230	        // additional requirements.
+1231	        unsafe { Pin::new_unchecked(boxed) }
+1232	    }
+1233	}
+1234	
+```
+
+```console
+(gdb) p pinned_x
+$5 = core::pin::Pin<alloc::boxed::Box<i32, alloc::alloc::Global>> {pointer: 0x5555555a5ba0}
+(gdb) p *pinned_x.pointer 
+$7 = 18
+```
+
+
