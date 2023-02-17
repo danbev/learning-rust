@@ -230,3 +230,107 @@ And here Mio is mapping the Selector to a new Poll instance and in process it is
 creating a new Registry with the selector that was just created.
 
 __work in progess__
+
+
+### async blocks
+We can write async block like thie following in rust:
+```rust
+    let future = async {
+        println!("async block ...");
+    };
+```
+And we can also specify that if this block captures any variables from the outer
+scope that they should be moved:
+```rust
+    let future = async move {
+        println!("async block ...");
+    };
+```
+
+An async block is what the Tokio `#[tokio::main]` macro turns into:
+```console
+$ cargo expand --bin async-main
+    Checking async v0.1.0 (/home/danielbevenius/work/rust/learning-rust/async)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.08s
+
+fn main() {
+    let body = async {
+        sleep(Duration::from_secs(1)).await;
+    };
+```
+And this Future is then passed to block_on:
+```rust
+    {
+        return tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .expect("Failed building the Runtime")
+            .block_on(body);
+    }
+}
+```
+But I till can't see how the `async` keywork turned that block into a Future?  
+
+Lets try expanding to hir:
+```console
+$ cargo rustc --bin async-move --profile=check -- -Zunpretty=hir
+    Checking async v0.1.0 (/home/danielbevenius/work/rust/learning-rust/async)
+#![feature(async_closure)]
+#[prelude_import]
+use std::prelude::rust_2018::*;
+#[macro_use]
+extern crate std;
+use futures::executor::block_on;
+
+fn main() {
+        let x = 10;
+        let future =
+            #[lang = "identity_future"](|mut _task_context:
+                        #[lang = "ResumeTy"]| { let y = x; });
+        block_on(future);
+    }
+    Finished dev [unoptimized + debuginfo] target(s) in 0.08s
+```
+Notice the lang_item `identity_future` here.
+```rust
+Variant name,            Name,                     Getter method name,         Target                  Generic requirements;
+ResumeTy,                sym::ResumeTy,            resume_ty,                  Target::Struct,         GenericRequirement::None;
+IdentityFuture,          sym::identity_future,     identity_future_fn,         Target::Fn,             GenericRequirement::None;
+GetContext,              sym::get_context,         get_context_fn,             Target::Fn,             GenericRequirement::None;
+                                                                            
+Context,                 sym::Context,             context,                    Target::Struct,         GenericRequirement::None;
+FuturePoll,              sym::poll,                future_poll_fn,             Target::Method(MethodKind::Trait { body: false }), GenericRequirement::None;
+```
+Searching for `identity_future` in the rustc repository provides the following,
+in compiler/rustc_ast_lowering/src/expr.rs:
+```rustc
+   /// Lower an `async` construct to a generator that implements `Future`.     
+    ///                                                                         
+    /// This results in:                                                        
+    ///                                                                         
+    /// ```text                                                                 
+    /// std::future::identity_future(static move? |_task_context| -> <ret_ty> { 
+    ///     <body>                                                              
+    /// })                                                                      
+    /// ```                                                                     
+    pub(super) fn make_async_expr(                                              
+        &mut self,                                                              
+        capture_clause: CaptureBy,                                              
+        outer_hir_id: hir::HirId,                                               
+        closure_node_id: NodeId,                                                
+        ret_ty: Option<hir::FnRetTy<'hir>>,                                     
+        span: Span,                                                             
+        async_gen_kind: hir::AsyncGeneratorKind,                                
+        body: impl FnOnce(&mut Self) -> hir::Expr<'hir>,                        
+    ) -> hir::ExprKind<'hir> { 
+     ...
+}
+```
+
+```console
+$ env RUSTFLAGS="--emit mir" cargo r -v --bin async-move
+    Finished dev [unoptimized + debuginfo] target(s) in 0.03s
+     Running `target/debug/async-move`
+```
+The output `mir` can be found in `target/debug/deps/async_move-77d75a0f2f19c31a.mir`
+
