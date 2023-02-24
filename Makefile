@@ -44,4 +44,4 @@ out/mono-filtered.ll: src/mono.rs
 
 .PHONY: clean
 clean:
-	@${RM} -rf out
+	@${RM} -rf out *.bc *.rcgu.o
