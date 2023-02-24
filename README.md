@@ -2647,26 +2647,71 @@ An only be used in two locations, as an argument type or as a return type.
 
 ### PhantomData
 Is a marker type and consumes no space and is intended to signal to the compiler
-that this our data type, like a struct, acts as though it stores a a value of
-type T, even though it actually does not.
-For example, in the the following case our struct only holds a raw pointer to
-B, but the compiler will see it as if it actually stores a value of that type.
-```rust
-struct PhantomStruct<B> {
-    b: *const B,
-    marker: PhantomData<B>,
-}
+that our data type, like a struct, acts as though it stores a value of type T,
+even though it actually does not. If the struct needs to have a lifetime then
+it may be reported as unused if there is only a single pointer in the struct
 
-fn main() {
-    println!("Phantom Data example");
-    let x = 18;
-    let ps: PhantomStruct<u32> = PhantomStruct {
-        b: &x,
-        marker: PhantomData
-    };
+
+Take the following example where we have a struct that is generic over T and U
+but don't use U:
+```rust
+struct Something<T, U> {
+    first: T,
+}
+fn main() {}
+```
+This will generate the following compiler error:
+```console
+$ make out/phantom_data_unused
+rustc "-Copt-level=0" "--edition=2021" -o out/phantom_data_unused -g src/phantom_data_unused.rs
+error[E0392]: parameter `U` is never used
+ --> src/phantom_data_unused.rs:1:21
+  |
+1 | struct Something<T, U> {
+  |                     ^ unused parameter
+  |
+  = help: consider removing `U`, referring to it in a field, or using a marker such as `PhantomData`
+  = help: if you intended `U` to be a const parameter, use `const U: usize` instead
+
+error: aborting due to previous error
+```
+We can fix this using:
+```rust
+struct Something<T, U> {
+    first: T,
+    _marker: std::marker::PhantomData<U>,
 }
 ```
-This is only used for verifying language safety properties.
+
+Another example is when we have an unsued lifetime for a type. Lets say we have
+a struct that only holds a raw pointer to a type B, and we want to specify that
+the data our type should not outlive the lifetime:
+```console
+$ rustc -o phantom - <<HERE
+struct PhantomStruct<'a, B> {
+b: *const B,
+}
+fn main() {}
+HERE
+error[E0392]: parameter `'a` is never used
+ --> <anon>:1:22
+  |
+1 | struct PhantomStruct<'a, B> {
+  |                      ^^ unused parameter
+  |
+  = help: consider removing `'a`, referring to it in a field, or using a marker such as `PhantomData`
+
+error: aborting due to previous error
+```
+But by using a PhantomData member we can still get this to compile using:
+```rust
+struct PhantomStruct<'a B> {
+    b: *const B,
+    marker: PhantomData<'a B>,
+}
+```
+An example can be found in
+[phantom_data_unused.rs](./src/phantom_data_unused.rs).
 
 
 ### Trait Objects
