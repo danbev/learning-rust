@@ -131,6 +131,16 @@ debugging formats and the name is not so odd when you think about what it does.
 Is a rust impl of [miniz](https://github.com/richgel999/miniz) which is a
 zlib encoder decoder.
 
+### libmemchr
+Is a library that provides functions to search for the occurence of strings.
+Now this can be done in pure rust but this is a highly optimized library.
+The name comes for the libc function memchr
+```console
+$ man memchr
+```
+The libc functions are `memchr`, `memrchr` (revers), and `rawmemchr` (used then
+the character is known to exist somewhere in the input).
+
 ### libaddr2line
 Is a library/binary for translating cross-platform addresses into function
 name, file name, and line number. So an address in an executable can be passed
