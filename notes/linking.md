@@ -127,7 +127,9 @@ $ nm std-67e0fe4bfa018a5e.std.b53c8129-cgu.0.rcgu.o | rustfilt
 [gimli](https://docs.rs/gimli/latest/gimli/) is a library for reading DWARF
 debugging formats and the name is not so odd when you think about what it does.
 
-
+### libminiz_oxide
+Is a rust impl of [miniz](https://github.com/richgel999/miniz) which is a
+zlib encoder decoder.
 
 ### emit object file
 ```
