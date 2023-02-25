@@ -131,6 +131,12 @@ debugging formats and the name is not so odd when you think about what it does.
 Is a rust impl of [miniz](https://github.com/richgel999/miniz) which is a
 zlib encoder decoder.
 
+### libaddr2line
+Is a library/binary for translating cross-platform addresses into function
+name, file name, and line number. So an address in an executable can be passed
+to add2line and will produce the filename and line number by using debugging
+information stored in the executable.
+
 ### emit object file
 ```
 $ rustc src/phantom_data_unused.rs --emit=obj
