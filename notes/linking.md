@@ -137,6 +137,11 @@ name, file name, and line number. So an address in an executable can be passed
 to add2line and will produce the filename and line number by using debugging
 information stored in the executable.
 
+### libobject
+Is a library that provides cross platform support for reading object and
+executable files. The lib can
+also write object files (COFF/ELF/Mach-O) and execuble files (ELF/PE).
+
 ### emit object file
 ```
 $ rustc src/phantom_data_unused.rs --emit=obj
