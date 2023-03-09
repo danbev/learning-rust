@@ -502,6 +502,16 @@ $ cargo test boxing::tests::boxing_test
 ```
 The above tests is in the crate boxing, and in the module tests.
 
+If you have multiple tests that start with the same name one can use `--exact`
+to specify that only the test matching should be run and not a substring:
+```console
+$ cargo test -- --exact boxing::tests::boxing_test
+```
+To see all the options for the test program:
+```console
+$ cargo test -- --help
+```
+
 Ignore a test:
 ```rust
 #[ignore]
