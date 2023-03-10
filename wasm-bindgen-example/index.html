@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+  </head>
+  <body>
+    <script type="module">
+      import init, { get_message } from './pkg/wasm_bindgen_example.js';
+
+      async function run() {
+        await init();
+        console.log(get_message("bajja"));
+      }
+
+      run();
+    </script>
+  </body>
+</html>
