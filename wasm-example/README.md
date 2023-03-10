@@ -41,4 +41,12 @@ So with the wasm module compiled we can run it. To do that we need a wasm
 runtime which can be a browser for example, or could be a runtime like
 wasmtime (and other runtimes as well).
 
-
+```console
+$ python -m http.server
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+```
+We can now acces http://0.0.0.0:8000/ and look at the console (CTRL+SHIFT+J) to
+see the output:
+```console
+increment(2) : 3
+```
