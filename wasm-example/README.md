@@ -50,3 +50,11 @@ see the output:
 ```console
 increment(2) : 3
 ```
+
+### Notes
+This example is very simple and only deals with a single i32 parameter which is
+passed from JavaScript to the wasm module. Recall that currently wasm only
+as support for for data types namely `i32`, `i64`, `f32`, and `f64`.
+
+For more complex programs there is a project named `wasm-bindgen` which allows
+JavaScript/Wasm interaction using strings, JS objects, classes.
