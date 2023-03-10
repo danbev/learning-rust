@@ -12,4 +12,5 @@ exclude = ["mio-example", "crypto", "startup", "embedded", "embassy",
            "static_cell", "streams", "chumsky",
            "trait_usage/driver", "future", "nb", "panic", "interrupts",
            "cargo-example", "cargo-package", "tuf-keyid", "tuf-client",
-           "actix-example"]
+           "actix-example", "memchr", "trunk-example", "yew-example",
+           "wasm-example", "wasm-bindgen-example"]
