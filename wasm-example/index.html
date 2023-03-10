@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>title</title>
+    <script>
+      (async () => {
+        let response = await fetch('target/wasm32-unknown-unknown/release/wasm_example.wasm');
+        let bytes = await response.arrayBuffer();
+        let { instance } = await WebAssembly.instantiate(bytes, { });
+	const value = 2;
+
+	      console.log(`increment(${value}) : ${instance.exports.increment(2)}`);
+      })();
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
