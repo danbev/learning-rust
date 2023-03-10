@@ -1,11 +1,15 @@
 use yew::prelude::*;
 
+use firstcomponent::FirstComponent;
+mod firstcomponent;
+
 #[function_component(App)]
 fn app() -> Html {
     html! {
         <>
         <div class="container">
             <h1>{"Yew Example Web App"}</h1>
+            <div><FirstComponent value={1}/></div>
         </div>
         </>
     }
