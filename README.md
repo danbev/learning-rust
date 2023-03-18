@@ -739,6 +739,9 @@ impl ::core::clone::Clone for Something {
 ```
 
 ### str
+Is an immutable sequence of utf-8 bytes. So a sequence means [...] and simliar
+could be any length they are handled using pointers. So we have a pointer to
+the memory and a length.
 ```rust
 let s = "bajja"
 ```
@@ -751,7 +754,8 @@ let s = "bajja"
 (lldb) expr &s
 (&str *) $1 = 0x00007fffffffcc80
 ```
-So this is stack allocated.
+A literal like this is stored in the executable and loaded when the program runs
+and it has a life time of `&'static str`
 ```console
 (lldb) disassemble 
 stack`stack::main::h338f866a487ef61e:
@@ -803,6 +807,68 @@ impl str {
 The #[lang = "str"] is an attribute. When the compiler sees `str` in code it
 knows that is should call this implementation.
 This is called a language item.
+
+We can also have a view into a String that is stored on the heap. This is
+because String impleement `Deref<Target = str>`
+```rust
+    let r2: &str = &String::from("bajja");
+```
+And this provides us the same type as we saw above for &str. We have a pointer
+which in this case now point to the heap, and the length.
+```
+(&str) $0 = "bajja" {
+  data_ptr = 0x00005555555a5bc0 "bajja"
+  length = 5
+}
+```
+But a String on the heap is a vector:
+```rust
+    let s1: String = String::from("bajja");
+```
+
+```console
+(lldb) expr s1
+(alloc::string::String) $0 = "bajja" {
+  vec = size=5 {
+    [0] = 'b'
+    [1] = 'a'
+    [2] = 'j'
+    [3] = 'j'
+    [4] = 'a'
+  }
+}
+
+(lldb) expr s1.vec.buf
+(alloc::raw_vec::RawVec<unsigned char, alloc::alloc::Global>) $12 = {
+  ptr = {
+    pointer = {
+      pointer = 0x00005555555a6bc0 "bajja"
+    }
+    _marker =
+  }
+  cap = 5
+  alloc =
+}
+```
+And a vector contains a pointer, the size of the allocation, and the number
+of elements that have been initialized.
+```console
+(alloc::vec::Vec<unsigned char, alloc::alloc::Global>) $2 = size=5 {
+  [0] = 'b'
+  [1] = 'a'
+  [2] = 'j'
+  [3] = 'j'
+  [4] = 'a'
+}
+```
+Compare this to a `&str` and we can see that these are very different.
+```console
+(lldb) expr r2
+(&str) $14 = "bajja" {
+  data_ptr = 0x00005555555a6bc0 "bajja"
+  length = 5
+}
+```
 
 ### lang_items
 Are a way for the stdlib and libcore to define types, traits, functions, and
