@@ -705,6 +705,39 @@ To create a copy you can use `clone`, but note that this will create a copy
 of the data on the heap and the two String instances will point to different
 places on the heap.
 
+### clone
+Clone can be derived for structs, for example:
+```rust
+#[derive(Clone)]
+struct Something {
+    name: String,
+}
+```
+And this will get expended into:
+```console
+$ cargo expand
+    Checking exploration v0.1.0 (/home/danielbevenius/work/rust/learning-rust/exploration)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.06s
+
+#![feature(prelude_import)]
+#[prelude_import]
+use std::prelude::rust_2021::*;
+#[macro_use]
+extern crate std;
+struct Something {
+    name: String,
+}
+#[automatically_derived]
+impl ::core::clone::Clone for Something {
+    #[inline]
+    fn clone(&self) -> Something {
+        Something {
+            name: ::core::clone::Clone::clone(&self.name),
+        }
+    }
+}
+```
+
 ### str
 ```rust
 let s = "bajja"
@@ -1468,50 +1501,6 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 ```
 ```console
 export BINDGEN_EXTRA_CLANG_ARGS="-I/usr/include" 
-```
-
-### Deno exploration
-Building deno
-```console
-$ cargo build
-```
-
-Verifying the build:
-```console
-$ cargo run --bin deno -- --version
-    Finished dev [unoptimized + debuginfo] target(s) in 0.17s
-     Running `target/debug/deno --version`
-deno 1.4.6
-v8 8.7.220.3
-typescript 4.0.3
-```
-
-Run a script:
-```console
-$ ./target/debug/deno run std/examples/welcome.ts 
-Check file:///home/danielbevenius/work/deno/deno/std/examples/welcome.ts
-Welcome to Deno 🦕
-```
-
-Lets step through this and see how it works:
-```console
-$ rust-lldb -- ./target/debug/deno run std/examples/welcome.ts 
-(lldb) br s -n main
-(lldb) r
-```
-
-```console
-$ file target/debug/deno
-target/debug/deno: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=2eeb497fb5461d2d4fad67a430a9702e1cf91db7, for GNU/Linux 3.2.0, with debug_info, not stripped
-$ ldd target/debug/deno
-	linux-vdso.so.1 (0x00007fffb0796000)
-	libdl.so.2 => /lib64/libdl.so.2 (0x00007f2629db6000)
-	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x00007f2629d9c000)
-	librt.so.1 => /lib64/librt.so.1 (0x00007f2629d91000)
-	libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f2629d6f000)
-	libm.so.6 => /lib64/libm.so.6 (0x00007f2629c29000)
-	libc.so.6 => /lib64/libc.so.6 (0x00007f2629a60000)
-	/lib64/ld-linux-x86-64.so.2 (0x00007f262f539000)
 ```
 
 ### Build scripts
