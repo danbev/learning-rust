@@ -1,0 +1,15 @@
+[package]
+name = "serde-examples"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hyper = "0.14.25"
+serde = { version = "1.0.156", features = ["serde_derive", "derive"] }
+serde_json = "1.0.94"
+
+[[bin]]
+name = "enum"
+path = "src/enum.rs"
