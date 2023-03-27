@@ -13,4 +13,6 @@ exclude = ["mio-example", "crypto", "startup", "embedded", "embassy",
            "trait_usage/driver", "future", "nb", "panic", "interrupts",
            "cargo-example", "cargo-package", "tuf-keyid", "tuf-client",
            "actix-example", "memchr", "trunk-example", "yew-example",
-           "wasm-example", "wasm-bindgen-example", "reqwest-example"]
+           "wasm-example", "wasm-bindgen-example", "reqwest-example",
+           "base64-example", "serde-examples", "exploration",
+           "async-exploration", "ssh-key-example"]
