@@ -17,7 +17,7 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEqiLuArRcZCY1s650rgKUDpj7f+b8
 
     let p = parse(public_key).unwrap();
     let (bytes, _ecc_oid, _curve_oid) = read_public_key(p.contents());
-    println!("public_key bytes: {:?}", &bytes[1..]);
+    //println!("public_key bytes: {:?}", &bytes[1..]);
     let keydata = KeyData::Ecdsa(EcdsaPublicKey::NistP256(
         EncodedPoint::from_bytes(&bytes).unwrap(),
     ));
@@ -29,6 +29,7 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEqiLuArRcZCY1s650rgKUDpj7f+b8
     // The below is just to verify that the public key data is only the second
     // element which is base64 encoded.
     // ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBKoi7gK0XGQmNbOudK4ClA6Y+3/m/PRzLtyvzw2lHEfZHMsl2PKulPkxU5HPbvOMCU7GXttcAT3f0kzxM6NCa80=
+    /*
     let key_base64 = "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBKoi7gK0XGQmNbOudK4ClA6Y+3/m/PRzLtyvzw2lHEfZHMsl2PKulPkxU5HPbvOMCU7GXttcAT3f0kzxM6NCa80=";
     let decoded = BASE64_STD_ENGINE.decode(key_base64).unwrap();
     let mut hasher = Sha256::new();
@@ -36,6 +37,7 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEqiLuArRcZCY1s650rgKUDpj7f+b8
     let result = hasher.finalize();
     let encoded = BASE64_STD_NO_PAD_ENGINE.encode(result);
     println!("encoded fingerprint: {:?}", encoded);
+    */
 }
 
 fn read_public_key(bytes: &[u8]) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
