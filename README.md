@@ -521,6 +521,19 @@ You can run just the ignored annotated tests using:
 $ cargo test -- --ignored
 ```
 
+Running single integration tests:
+Integration tests are tests that exist in the `tests` directory and are each
+compiled into separate crates. They should be written to test the external API
+interface of the library. These can be run using:
+```console
+$ cargo t --features="ecdsa, alloc" --test 'public_key' decode_ecdsa_p256_openssh  -- --show-output --exact
+```
+
+Running only the unit tests we have to specify `--lib`:
+```console
+$ cargo t --lib some_tests  -- --show-output --exact
+```
+
 ### Manual testing
 ```console
 $ rustc snippets/src/readline.rs
