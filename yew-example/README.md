@@ -2,7 +2,7 @@
 Yew is a component based framework for writing web applications similar to
 React and Elm (which does not really help me as I don't have any experience with
 those frameworks) using WebAssembly (Wasm). So this enables us to write a pure
-Rust application which is then compiled to wasm. Wasm and the potential to be
+Rust application which is then compiled to wasm. Wasm has the potential to be
 more performat than JavaScript.
 
 This example is intended to help me understand how Yew works and also serve as
@@ -10,7 +10,8 @@ a quick reference to try things out in a simple and familiar
 setting/application.
 
 ### Trunk
-We mentioned that we have to compile our Rust program to wasm.
+We mentioned that we have to compile our Rust program to wasm and trunk is what
+performs this task for use.
 
 ### Build
 ```console
