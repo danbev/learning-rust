@@ -1,4 +1,10 @@
 ## Example of using trunk
+Trunk is similar to wasm-pack.
+```
+Trunk is designed for creating progressive, single-page web applications,
+written in Rust, compiled to WebAssembly, without any JS (though today JS is
+still needed for loading WASM modules). 
+```
 
 ### Prerequisites
 ```console
