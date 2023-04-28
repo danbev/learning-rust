@@ -1,0 +1,17 @@
+{
+  "name": "js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.mjs",
+  "scripts": {
+    "bindings": "npx jco transpile ../example-component.wasm -o dist",
+    "inspect-wit": "npx jco wit ../example-component.wasm",
+    "example": "node index.mjs"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@bytecodealliance/jco": "^0.5.5"
+  },
+  "type": "module"
+}
