@@ -16,4 +16,5 @@ exclude = ["mio-example", "crypto", "startup", "embedded", "embassy",
            "wasm-example", "wasm-bindgen-example", "reqwest-example",
            "base64-example", "serde-examples", "exploration",
            "async-exploration", "ssh-key-example", "webpack-example",
-           "wit-bindgen-example", "static-files-example", "indexmap-example"]
+           "wit-bindgen-example", "static-files-example", "indexmap-example",
+           "id-arena-example"]
