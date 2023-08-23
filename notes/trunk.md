@@ -231,6 +231,22 @@ TODO: look into WasmOpt in trunk.
 </script></body></html>
 ```
 
+### trunk serve: no strorage space 
+I ran into this error when trying to run `trunk serve`:
+```console
+$ trunk serve
+Error: failed to watch "/home/danielbevenius/work/security/trustification/trustification/spog/ui" for file system changes
+
+Caused by:
+    no storage space
+```
+Increasing the following limits allowed trunk to start:
+```console
+$ sudo sysctl fs.inotify.max_user_instances=8192 # example number
+$ sudo sysctl fs.inotify.max_user_watches=524288 # example number
+$ sudo sysctl -p
+```
+
 [HtmlPipeline]: https://github.com/thedodd/trunk/blob/master/src/pipelines/html.rs
 [spawn]: https://github.com/thedodd/trunk/blob/cb691cc625a8a51e93a0c52a822be1bb4f41f827/src/pipelines/html.rs#L68
 [run]: https://github.com/thedodd/trunk/blob/cb691cc625a8a51e93a0c52a822be1bb4f41f827/src/pipelines/html.rs#L73
