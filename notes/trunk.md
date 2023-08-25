@@ -247,6 +247,25 @@ $ sudo sysctl fs.inotify.max_user_watches=524288 # example number
 $ sudo sysctl -p
 ```
 
+### Development using vim
+When using vim there will be writes to the watched directories but these will
+sometimes be to vim swap files. These update will cause trunk to rebuild which
+is not what we want. To avoid this we can add the set an environment variable
+named `TRUNK_WATCH_IGNORE` to `*.swp`:
+```console
+$ export TRUNK_WATCH_IGNORE=$(find src -name '*.swp' | tr '\n' ',' | sed 's/,$//')
+```
+This will cause trunk to ignore these files and only rebuild when we actually
+save a source file.
+
+Since we might be using trunk for multiple project it might be worth adding this
+as a shell function:
+```console
+set_trunk_watch_ignore() {
+    export TRUNK_WATCH_IGNORE=$(find src -name '*.swp' | tr '\n' ',' | sed 's/,$//')
+}
+```
+
 [HtmlPipeline]: https://github.com/thedodd/trunk/blob/master/src/pipelines/html.rs
 [spawn]: https://github.com/thedodd/trunk/blob/cb691cc625a8a51e93a0c52a822be1bb4f41f827/src/pipelines/html.rs#L68
 [run]: https://github.com/thedodd/trunk/blob/cb691cc625a8a51e93a0c52a822be1bb4f41f827/src/pipelines/html.rs#L73
