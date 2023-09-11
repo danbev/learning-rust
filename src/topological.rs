@@ -23,10 +23,14 @@ fn topological_sort<'a>(
     stack.push_front(root);
 }
 
-fn main() {
+fn topological_order<'a>(value: &'a Value<'a>) -> VecDeque<&'a Value<'a>> {
     let mut visited = HashSet::new();
     let mut stack = VecDeque::new();
+    topological_sort(&value, &mut visited, &mut stack);
+    stack
+}
 
+fn main() {
     let three = Value {
         label: "3".to_string(),
         children: vec![],
@@ -44,7 +48,7 @@ fn main() {
         children: vec![&one, &two],
     };
 
-    topological_sort(&zero, &mut visited, &mut stack);
+    let stack = topological_order(&zero);
 
     println!("Topologically sorted order:");
     for value in stack {
