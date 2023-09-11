@@ -7,27 +7,29 @@ struct Value<'a> {
     children: Vec<&'a Value<'a>>,
 }
 
-fn topological_sort<'a>(
-    root: &'a Value<'a>,
-    visited: &mut HashSet<&'a Value<'a>>,
-    stack: &mut VecDeque<&'a Value<'a>>,
-) {
-    visited.insert(root);
+impl Value<'_> {
+    fn topological_sort<'a>(
+        root: &'a Value<'a>,
+        visited: &mut HashSet<&'a Value<'a>>,
+        stack: &mut VecDeque<&'a Value<'a>>,
+    ) {
+        visited.insert(root);
 
-    for child in root.children.iter() {
-        if !visited.contains(child) {
-            topological_sort(child, visited, stack);
+        for child in root.children.iter() {
+            if !visited.contains(child) {
+                Self::topological_sort(child, visited, stack);
+            }
         }
+
+        stack.push_front(root);
     }
 
-    stack.push_front(root);
-}
-
-fn topological_order<'a>(value: &'a Value<'a>) -> VecDeque<&'a Value<'a>> {
-    let mut visited = HashSet::new();
-    let mut stack = VecDeque::new();
-    topological_sort(&value, &mut visited, &mut stack);
-    stack
+    fn topological_order<'a>(value: &'a Value<'a>) -> VecDeque<&'a Value<'a>> {
+        let mut visited = HashSet::new();
+        let mut stack = VecDeque::new();
+        Self::topological_sort(&value, &mut visited, &mut stack);
+        stack
+    }
 }
 
 fn main() {
@@ -48,7 +50,7 @@ fn main() {
         children: vec![&one, &two],
     };
 
-    let stack = topological_order(&zero);
+    let stack = Value::topological_order(&zero);
 
     println!("Topologically sorted order:");
     for value in stack {
