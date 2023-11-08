@@ -23,3 +23,7 @@ path = "src/blocking.rs"
 [[bin]]
 name = "notify"
 path = "src/notify.rs"
+
+[[bin]]
+name = "oneshot"
+path = "src/oneshot.rs"
