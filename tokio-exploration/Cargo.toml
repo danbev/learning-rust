@@ -15,3 +15,7 @@ path = "src/main.rs"
 [[bin]]
 name = "join-handle"
 path = "src/join-handle.rs"
+
+[[bin]]
+name = "blocking"
+path = "src/blocking.rs"
