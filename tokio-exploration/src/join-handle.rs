@@ -9,6 +9,10 @@ fn desugered_async_fn() -> impl Future<Output = u32> {
     async { 18 }
 }
 
+async fn async_string(s: &str) -> String {
+    s.to_string()
+}
+
 #[tokio::main]
 async fn main() {
     let jh: JoinHandle<u32> = tokio::spawn(async_fn());
@@ -16,6 +20,10 @@ async fn main() {
     println!("{}", v);
 
     let jh: JoinHandle<u32> = tokio::spawn(desugered_async_fn());
+    let v = jh.await.unwrap();
+    println!("{}", v);
+
+    let jh: JoinHandle<String> = tokio::spawn(async_string("bajja"));
     let v = jh.await.unwrap();
     println!("{}", v);
 }
