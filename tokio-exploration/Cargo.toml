@@ -27,3 +27,7 @@ path = "src/notify.rs"
 [[bin]]
 name = "oneshot"
 path = "src/oneshot.rs"
+
+[[bin]]
+name = "mpsc"
+path = "src/mpsc.rs"
