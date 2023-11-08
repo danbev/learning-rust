@@ -19,3 +19,7 @@ path = "src/join-handle.rs"
 [[bin]]
 name = "blocking"
 path = "src/blocking.rs"
+
+[[bin]]
+name = "notify"
+path = "src/notify.rs"
