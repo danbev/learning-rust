@@ -23,7 +23,9 @@ async fn main() {
     let v = jh.await.unwrap();
     println!("{}", v);
 
-    let jh: JoinHandle<String> = tokio::spawn(async_string("bajja"));
+    // tokio::task::spawn is reexported in/by tokio::spawn so it is the same
+    // functions that is being called.
+    let jh: JoinHandle<String> = tokio::task::spawn(async_string("bajja"));
     let v = jh.await.unwrap();
     println!("{}", v);
 }
