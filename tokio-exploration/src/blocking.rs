@@ -3,7 +3,7 @@ use tokio::time::{sleep, Duration};
 
 fn blocking() -> String {
     println!("blocking function started...");
-    thread::sleep(time::Duration::from_secs(10));
+    thread::sleep(time::Duration::from_secs(6));
     "blocking function done".to_string()
 }
 
@@ -14,7 +14,8 @@ async fn async_fn(id: u32) {
 
 #[tokio::main]
 async fn main() {
-    let b_h = tokio::task::spawn_blocking(blocking);
+    //let b_h = tokio::task::spawn_blocking(blocking);
+    let b_h = tokio::task::spawn_blocking(|| blocking());
 
     let mut handles = Vec::new();
     for i in 0..10 {
