@@ -1,9 +1,8 @@
-use tokio::sync::oneshot;
+use tokio::sync::oneshot::{self, Receiver, Sender};
 
 #[tokio::main]
 async fn main() {
-    let (tx, rx) = oneshot::channel();
-    let tx: tokio::sync::oneshot::Sender<&str> = tx;
+    let (tx, rx): (Sender<&str>, Receiver<&str>) = oneshot::channel();
     let rx: tokio::sync::oneshot::Receiver<&str> = rx;
     println!("oneshot channel created: tx = {:?}, rx = {:?}", tx, rx);
 
