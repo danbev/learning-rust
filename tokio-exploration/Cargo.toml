@@ -35,3 +35,7 @@ path = "src/mpsc.rs"
 [[bin]]
 name = "unbounded"
 path = "src/unbounded.rs"
+
+[[bin]]
+name = "mutex"
+path = "src/mutex.rs"
