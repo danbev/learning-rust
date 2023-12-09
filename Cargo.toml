@@ -1,9 +1,10 @@
 [workspace]
 
+resolver = "2"
 members = [
     "main",
     "snippets",
-    "hyper-server",
+    "hyper-server", "plotter-example",
 ]
 exclude = ["mio-example", "crypto", "startup", "embedded", "embassy",
            "features", "drogue-device", "xshell", "ffi_cargo",
@@ -17,4 +18,4 @@ exclude = ["mio-example", "crypto", "startup", "embedded", "embassy",
            "base64-example", "serde-examples", "exploration",
            "async-exploration", "ssh-key-example", "webpack-example",
            "wit-bindgen-example", "static-files-example", "indexmap-example",
-           "id-arena-example"]
+           "id-arena-example", "wasi-println", "tokio-exploration"]
