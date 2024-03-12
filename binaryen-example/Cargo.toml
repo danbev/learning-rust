@@ -1,0 +1,9 @@
+[package]
+name = "binaryen-example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+binaryen-sys = "0.13.0"
+
+[workspace]
