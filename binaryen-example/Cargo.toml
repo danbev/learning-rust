@@ -6,4 +6,7 @@ edition = "2021"
 [dependencies]
 binaryen-sys = "0.13.0"
 
+[[bin]]
+name = "basic"
+path = "src/main.rs"
 [workspace]
