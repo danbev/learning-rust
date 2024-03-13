@@ -1,8 +1,8 @@
 use binaryen_sys::{
     BinaryenAddDataSegment, BinaryenAddFunction, BinaryenAddFunctionExport, BinaryenConst,
-    BinaryenExpressionPrint, BinaryenIndex, BinaryenLiteralInt32, BinaryenModuleCreate,
-    BinaryenModuleDispose, BinaryenModulePrint, BinaryenModuleWrite, BinaryenSetMemory,
-    BinaryenStringConst, BinaryenTypeCreate, BinaryenTypeInt32,
+    BinaryenExpressionPrint, BinaryenIndex, BinaryenLiteralInt32, BinaryenLoad,
+    BinaryenModuleCreate, BinaryenModuleDispose, BinaryenModulePrint, BinaryenModuleWrite,
+    BinaryenSetMemory, BinaryenStringConst, BinaryenTypeCreate, BinaryenTypeInt32,
 };
 
 use std::ffi::{c_char, CString};
@@ -61,6 +61,7 @@ fn main() {
         let params = BinaryenTypeCreate(ptr::null_mut(), 0);
         let results = BinaryenTypeInt32();
         let index = data2_offset;
+
         let _ = BinaryenAddFunction(
             module,
             func_name.as_ptr() as *mut _,
@@ -69,6 +70,42 @@ fn main() {
             ptr::null_mut(),
             0,
             index,
+        );
+        BinaryenAddFunctionExport(
+            module,
+            func_name.as_ptr() as *mut _,
+            func_name.as_ptr() as *mut _,
+        );
+
+        let offset = 0;
+        let offset_expr = BinaryenConst(module, BinaryenLiteralInt32(offset as i32));
+        let ty = BinaryenTypeInt32();
+        let load_expr = BinaryenLoad(
+            module,
+            4,                // bytes to load (size of i32)
+            false,            // sign-extend the loaded value
+            offset,           // offset in memory where the string pointer is stored
+            1,                // alignment (1 means no specific alignment)
+            ty,               // type of the value being loaded (i32 for pointers)
+            offset_expr,      // pointer expression (offset in this case)
+            std::ptr::null(), // memory name (null for default memory)
+        );
+
+        let func_name = CString::new("getData").unwrap();
+        let func = BinaryenStringConst(module, func_name.as_ptr() as *mut _);
+        BinaryenExpressionPrint(func);
+
+        let params = BinaryenTypeCreate(ptr::null_mut(), 0);
+        let results = BinaryenTypeInt32();
+
+        let _ = BinaryenAddFunction(
+            module,
+            func_name.as_ptr() as *mut _,
+            params,
+            results,
+            ptr::null_mut(),
+            0,
+            load_expr,
         );
         BinaryenAddFunctionExport(
             module,
