@@ -37,10 +37,11 @@ fn main() {
 
         BinaryenModulePrint(module);
 
-        let model_path_func = get_function("inf:wasi/config#get-model-path", module);
-        let model_path_name = get_function_name(model_path_func);
-        println!("module_path_func: name: {:?}", model_path_name);
-        let body = BinaryenFunctionGetBody(model_path_func);
+        let func = get_function("inf:wasi/config#get-name", module);
+        let func_name = get_function_name(func);
+        println!("module_path_func: name: {:?}", func_name);
+        let body = BinaryenFunctionGetBody(func);
+        println!("body:");
         BinaryenExpressionPrint(body);
 
         BinaryenModuleDispose(module);
