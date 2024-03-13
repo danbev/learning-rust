@@ -4,3 +4,6 @@ build:
 run-basic: 
 	cargo r --bin basic --release
 	node test-wasm.js
+
+run-update: 
+	cargo r --bin update --release

@@ -9,4 +9,9 @@ binaryen-sys = "0.13.0"
 [[bin]]
 name = "basic"
 path = "src/main.rs"
+
+[[bin]]
+name = "update"
+path = "src/update.rs"
+
 [workspace]
