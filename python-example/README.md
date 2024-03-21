@@ -2,7 +2,7 @@
 This is an example of a wasi module that is written in Rust and evaluates and
 Python script/snippet.
 
-The goal is just to verify that it is possible to run Python code from a Rust
+The goal is just to verify that it is possible to run Python code from Rust
 in a wasi module.
 
 ### Building
