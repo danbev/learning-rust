@@ -4,14 +4,22 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-binaryen-sys = "0.13.0"
+binaryen-sys = { version = "0.13.0", optional = true }
+
+[features]
+bin-deps = ["binaryen-sys"]
 
 [[bin]]
 name = "basic"
 path = "src/main.rs"
+required-features = ["bin-deps"]
 
 [[bin]]
 name = "update"
 path = "src/update.rs"
+required-features = ["bin-deps"]
+
+[lib]
+crate-type = ["cdylib"]
 
 [workspace]
