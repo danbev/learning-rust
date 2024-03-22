@@ -12,13 +12,11 @@ $ make build
 
 ### Running
 ```console
-$ make run
+$ make run 
 wasmtime \
 --dir=./target/wasm32-wasi/wasi-deps/usr::/usr \
         target/wasm32-wasi/release/python_example.wasm
-Python Wasm Example (Printed from Rust)
-Printing from Python...bajja
-$ 
-
+Going to eval the following Python code:  print('Printing from Python!')
+Printing from Python!
+Python code executed successfully!
 ```
-
