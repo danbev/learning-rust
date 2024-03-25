@@ -12,5 +12,8 @@ pub fn print() {
             Ok(_) => println!("Python code executed successfully!"),
             Err(e) => println!("Python code execution failed! {:#?}", e),
         }
+
+        let pm = py.import("time").unwrap();
+        println!("{:?}", pm.getattr("ctime").unwrap().call0());
     });
 }

@@ -22,7 +22,7 @@ pub fn state() -> Html {
         Callback::from(move |_| {
             log::info!("callback counter: {}", *counter);
             // Comment out this to see the difference between use_state and use_state_eq
-            //counter.set(*counter + 1)
+            counter.set(*counter + 1)
         })
     };
 
