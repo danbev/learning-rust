@@ -5,7 +5,20 @@ build:
 run:
 	wasmtime \
 	--dir=./target/wasm32-wasi/wasi-deps/usr::/usr \
+	--dir=./venv/lib/python3.11/site-packages::/site-packages \
+	--env PYTHONPATH=/site-packages \
         target/wasm32-wasi/release/python_example.wasm
+
+## Just using this as an example of how a python package can be used from
+## a wasm module. But I've n not been able to get this to work with numpy.
+emoji-dep: 
+	source venv/bin/activate && pip install emoji \
+	--target target/wasm32-wasi/wasi-deps/usr/local/lib/python3.11/site-packages \
+	--only-binary :all: \
+	--implementation py \
+	--abi none \
+       	--platform any \
+	--python-version "3.11"
 
 
 dep: 
