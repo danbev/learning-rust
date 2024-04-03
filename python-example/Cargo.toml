@@ -4,12 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-wlr-libpy = { git = "https://github.com/vmware-labs/webassembly-language-runtimes.git", features = [ "py_main", ] }
-pyo3 = { version = "0.20.3", features = ["abi3-py311"] }
-numpy = "0.20"
+wlr-libpy = { git = "https://github.com/vmware-labs/webassembly-language-runtimes.git", default-features=false, features = [ "py_main", "py312" ] }
+pyo3 = { git = "https://github.com/PyO3/pyo3.git", features = ["abi3-py312"] }
+#numpy = "0.20"
 
 [build-dependencies]
-wlr-libpy = { git = "https://github.com/vmware-labs/webassembly-language-runtimes.git", features = ["build"] }
+wlr-libpy = { git = "https://github.com/vmware-labs/webassembly-language-runtimes.git", default-features=false, features = ["build", "py312"] }
 
 [lib]
 crate-type = ["cdylib"]

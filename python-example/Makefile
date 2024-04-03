@@ -3,32 +3,31 @@ build:
 
 # This is needed to preopen the CPython standard libraries.
 run:
-	wasmtime \
+	env RUST_BACKTRACE=1 wasmtime \
 	--dir=./target/wasm32-wasi/wasi-deps/usr::/usr \
-	--dir=./venv/lib/python3.11/site-packages::/site-packages \
-	--env PYTHONPATH=/site-packages \
+	--dir=./target/wasm32-wasi/wasi-deps/usr/local/lib/python3.12/site-packages::/usr/local/lib/python3.12/site-packages \
+	--env PYTHONPATH=/usr/local/lib/python3.12/site-packages \
         target/wasm32-wasi/release/python_example.wasm
+
+download-numpy-wasi:
+	mkdir -p target/wasm32-wasi/wasi-deps/usr/local/lib/python3.12/site-packages
+	cd target/wasm32-wasi/wasi-deps/usr/local/lib/python3.12/site-packages && \
+	curl -OL https://github.com/dicej/wasi-wheels/releases/download/v0.0.1/numpy-wasi.tar.gz && \
+	gunzip -dc numpy-wasi.tar.gz | tar xvf -
 
 ## Just using this as an example of how a python package can be used from
 ## a wasm module. But I've n not been able to get this to work with numpy.
-emoji-dep: 
-	source venv/bin/activate && pip install emoji \
-	--target target/wasm32-wasi/wasi-deps/usr/local/lib/python3.11/site-packages \
-	--only-binary :all: \
-	--implementation py \
-	--abi none \
-       	--platform any \
-	--python-version "3.11"
-
+emoji-dep: DEP=emoji
+emoji-dep: dep
 
 dep: 
-	PIP_REQUIRE_VIRTUALENV=0 python -m pip install --target deps \
+	source venv/bin/activate && pip install ${DEP} \
+	--target target/wasm32-wasi/wasi-deps/usr/local/lib/python3.12/site-packages \
 	--only-binary :all: \
 	--implementation py \
 	--abi none \
-       	--platform any \
-	--python-version "3.11" \
-       	-r requirements-convert.txt
+	--platform any \
+	--python-version "3.12"
 
 
 download-sysroot:
